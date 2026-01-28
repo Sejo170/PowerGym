@@ -4,8 +4,10 @@ namespace App\Controllers;
 
 class Home extends BaseController
 {
-    public function index(): string
+    public function index()
     {
-        return view('welcome_message');
+        echo view('plantilla/header');
+        echo view('welcome_message');
+        echo view('plantilla/footer');
     }
 }
