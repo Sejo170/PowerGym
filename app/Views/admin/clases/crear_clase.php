@@ -1,0 +1,50 @@
+<div class="container mt-4" style="max-width: 800px;">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h3 class="mb-0">Nueva Clase</h3>
+        </div>
+        <div class="card-body">
+            
+            <form action="<?= base_url('admin/clases/guardar') ?>" method="post">
+                
+                <?= csrf_field() ?>
+
+                <div class="mb-3">
+                    <label for="nombre" class="form-label">Nombre de la Clase</label>
+                    <input type="text" class="form-control" name="nombre" id="nombre" required placeholder="Ej: Yoga Matutino">
+                </div>
+
+                <div class="mb-3">
+                    <label for="descripcion" class="form-label">Descripción</label>
+                    <textarea class="form-control" name="descripcion" id="descripcion" rows="3" placeholder="Detalles de la sesión..."></textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="fecha_hora" class="form-label">Fecha y Hora</label>
+                        <input type="datetime-local" class="form-control" name="fecha_hora" id="fecha_hora" required>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="plazas_totales" class="form-label">Plazas Disponibles</label>
+                        <input type="number" class="form-control" name="plazas_totales" id="plazas_totales" value="20" required>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="id_entrenador" class="form-label">ID Entrenador</label>
+                        <input type="number" class="form-control" name="id_entrenador" id="id_entrenador" required placeholder="Ej: 2">
+                        <small class="text-muted">Introduce el ID del usuario entrenador.</small>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between">
+                    <a href="<?= base_url('admin/clases') ?>" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Guardar Clase</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>

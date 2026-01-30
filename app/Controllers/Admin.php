@@ -30,31 +30,29 @@ class Admin extends BaseController
      */
     public function borrarUsuario($idUsuarioParaBorrar = null)
     {
-        // --- 🛡️ INICIO DE SEGURIDAD CRÍTICA ---
-        
-        // 1. Obtenemos el ID del administrador que está conectado AHORA.
-        // CodeIgniter busca en la sesión el valor guardado como 'id'.
+        // --- 🛡️ 1. SEGURIDAD: ¿Eres Admin? ---
+        // Si no está logueado O no es rol 1, lo echamos fuera.
+        if (!session()->get('is_logged_in') || session()->get('id_rol') != 1) {
+            return redirect()->to('/')->with('mensaje_error', 'Acceso denegado. No eres administrador.');
+        }
+
+        // --- 🛡️ 2. SEGURIDAD: ¿Te estás borrando a ti mismo? ---
         $idAdminLogueado = session()->get('id'); 
 
-        // 2. Comparamos: ¿El ID que quieren borrar es IGUAL al mío?
         if ($idUsuarioParaBorrar == $idAdminLogueado) {
-            
-            // ¡ALERTA! El admin intenta borrarse a sí mismo.
-            // redirect()->back() nos devuelve a la página anterior.
-            // with() envía un mensaje temporal ("flash message") para mostrar el error.
             return redirect()->back()->with('mensaje_error', '¡No puedes borrar tu propia cuenta!');
         }
 
-        // --- 🏁 FIN DE SEGURIDAD ---
-
-        // Si llegamos aquí, es que los IDs son distintos. Podemos borrar.
+        // --- 💀 3. BORRADO ---
         $usuarioModel = new UsuarioModel();
         
-        // delete() es la función mágica de CI4 para borrar por ID
-        $usuarioModel->delete($idUsuarioParaBorrar);
-
-        // Volvemos a la lista con un mensaje de éxito
-        return redirect()->to('/admin')->with('mensaje_exito', 'Usuario eliminado correctamente.');
+        // Verificamos si el usuario existe antes de intentar borrar
+        if($usuarioModel->find($idUsuarioParaBorrar)) {
+            $usuarioModel->delete($idUsuarioParaBorrar);
+            return redirect()->to('/admin')->with('mensaje_exito', 'Usuario eliminado correctamente.');
+        } else {
+            return redirect()->to('/admin')->with('mensaje_error', 'El usuario no existe.');
+        }
     }
 
     /**
@@ -63,16 +61,32 @@ class Admin extends BaseController
      */
     public function cambiarRol($idUsuario, $nuevoRol)
     {
+        // --- 🛡️ 1. SEGURIDAD: Verificación de Admin ---
+        if (!session()->get('is_logged_in') || session()->get('id_rol') != 1) {
+            return redirect()->to('/')->with('mensaje_error', 'Acceso denegado.');
+        }
+
+        // --- 🛡️ 2. VALIDACIÓN: ¿El rol es válido? ---
+        // Definimos los roles permitidos según tu base de datos (1=Admin, 2=Entrenador, 3=Cliente, 4=Socio)
+        $rolesValidos = [1, 2, 3, 4]; 
+        
+        if (!in_array($nuevoRol, $rolesValidos)) {
+            return redirect()->back()->with('mensaje_error', 'El rol seleccionado no es válido.');
+        }
+
+        // --- 3. PROCESAR EL CAMBIO ---
         $usuarioModel = new UsuarioModel();
 
-        // Preparamos los datos. Al tener 'id', save() sabe que es una ACTUALIZACIÓN (Update).
-        $data = [
+        // Verificamos que el usuario exista
+        if (!$usuarioModel->find($idUsuario)) {
+            return redirect()->back()->with('mensaje_error', 'Usuario no encontrado.');
+        }
+
+        // Guardamos el cambio (save detecta el ID y hace un UPDATE)
+        $usuarioModel->save([
             'id'     => $idUsuario,
             'id_rol' => $nuevoRol
-        ];
-
-        // Guardamos el cambio
-        $usuarioModel->save($data);
+        ]);
 
         return redirect()->back()->with('mensaje_exito', 'Rol actualizado correctamente.');
     }
