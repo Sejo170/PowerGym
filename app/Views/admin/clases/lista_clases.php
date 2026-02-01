@@ -6,12 +6,6 @@
         </a>
     </div>
 
-    <?php if (session()->getFlashdata('mensaje_exito')): ?>
-        <div class="alert alert-success">
-            <?= session()->getFlashdata('mensaje_exito') ?>
-        </div>
-    <?php endif; ?>
-
     <?php if (session()->getFlashdata('mensaje_error')): ?>
         <div class="alert alert-danger">
             <?= session()->getFlashdata('mensaje_error') ?>
@@ -19,6 +13,12 @@
     <?php endif; ?>
 
     <div class="card shadow-sm">
+        <?php if (session()->getFlashdata('mensaje_exito')): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <?= session()->getFlashdata('mensaje_exito') ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover table-striped mb-0 align-middle">
@@ -60,13 +60,11 @@
                                             Editar
                                         </a>
 
-                                        <form action="<?= base_url('admin/clases/borrar/' . $clase['id']) ?>" method="post" style="display:inline;">
-                                            <?= csrf_field() ?>
-                                            <input type="hidden" name="_method" value="DELETE">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Seguro que quieres eliminar esta clase?');">
-                                                Borrar
-                                            </button>
-                                        </form>
+                                        <a href="<?= base_url('admin/clases/borrar/' . $clase['id']) ?>" 
+                                            class="btn btn-danger btn-sm" 
+                                            onclick="return confirm('¿Estás seguro de que deseas eliminar esta clase? Esta acción no se puede deshacer.');">
+                                            Borrar
+                                        </a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

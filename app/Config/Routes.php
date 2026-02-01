@@ -22,6 +22,9 @@ $routes->get('login', 'Login::index');   // Muestra el formulario
 $routes->post('auth', 'Login::auth');    // Procesa el formulario (Tu base_url('auth'))
 $routes->get('logout', 'Login::logout'); // Cierra la sesión
 
+// Rutas de Horarios
+$routes->get('horarios', 'Horarios::index');
+
 // --------------
 // RUTA PRIVADA
 // --------------
@@ -49,6 +52,9 @@ $routes->group('admin', ['filter' => 'authGuard'], function($routes) {
     $routes->get('clases', 'Clases::index');           // Ver la lista
     $routes->get('clases/crear', 'Clases::crear');     // Ver el formulario
     $routes->post('clases/guardar', 'Clases::guardar'); // Recibir los datos (POST)
+    $routes->get('clases/borrar/(:num)', 'Clases::borrar/$1'); // Borrar clase
+    $routes->post('clases/actualizar', 'Clases::actualizar'); // Actualizar las clases
+    $routes->get('clases/editar/(:num)', 'Clases::editar/$1');
 });
 
 // Grupo para usuarios logueados (Cualquier rol)

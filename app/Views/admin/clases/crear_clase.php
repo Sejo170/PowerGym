@@ -31,9 +31,17 @@
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label for="id_entrenador" class="form-label">ID Entrenador</label>
-                        <input type="number" class="form-control" name="id_entrenador" id="id_entrenador" required placeholder="Ej: 2">
-                        <small class="text-muted">Introduce el ID del usuario entrenador.</small>
+                        <label for="id_entrenador" class="form-label">Entrenador</label>
+                        <select class="form-select" name="id_entrenador" id="id_entrenador" required>
+                            <option value="" selected disabled>Selecciona un entrenador...</option>
+                            
+                            <?php foreach ($entrenadores as $entrenador): ?>
+                                <option value="<?= $entrenador['id'] ?>">
+                                    <?= esc($entrenador['nombre']) . ' ' . esc($entrenador['apellidos']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                            
+                        </select>
                     </div>
                 </div>
 
