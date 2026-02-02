@@ -52,11 +52,15 @@ class Login extends BaseController
             session()->set($datosSesion);
 
             // 5. Redirigimos según el rol
-            // Si es Admin (1) o Entrenador (2), al panel. Si no, a la portada.
-            if ($usuario['id_rol'] == 1 || $usuario['id_rol'] == 2) {
+            if ($usuario['id_rol'] == 1) {
+                // Si es Admin, va al panel general
                 return redirect()->to('/admin');
+            } elseif ($usuario['id_rol'] == 2) {
+                // Si es Entrenador, va DIRECTO a gestionar clases
+                return redirect()->to('/admin/clases');
             } else {
-                return redirect()->to('/'); // A la página de inicio (Tienda/Clases)
+                // Clientes y otros van a la portada
+                return redirect()->to('/'); 
             }
 
         } else {

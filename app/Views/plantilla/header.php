@@ -1,3 +1,6 @@
+<?php 
+    $rol = session()->get('id_rol'); 
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -26,9 +29,18 @@
                     
                     <?php if (session()->get('is_logged_in')): ?>
                         
-                        <?php if (session()->get('id_rol') == 1): ?>
+                        <?php if ($rol == 1): ?>
                             <li class="nav-item">
-                                <a class="nav-link" href="<?= base_url('admin') ?>">Panel Admin</a>
+                                <a class="nav-link" href="<?= base_url('admin') ?>">👥 Panel Admin</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="<?= base_url('admin/clases') ?>">🏋️ Clases</a>
+                            </li>
+                        <?php endif; ?>
+
+                        <?php if ($rol == 2): ?>
+                            <li class="nav-item">
+                                <a class="nav-link" href="<?= base_url('admin/clases') ?>">🏋️ Clases</a>
                             </li>
                         <?php endif; ?>
 

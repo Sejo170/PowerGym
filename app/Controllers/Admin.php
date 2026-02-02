@@ -19,8 +19,9 @@ class Admin extends BaseController
         $data['usuarios'] = $usuarioModel->findAll();
 
         // Cargamos la vista y le enviamos los datos
-        // (La vista la crearemos en el siguiente paso)
-        return view('admin/lista_usuarios', $data);
+        echo view('plantilla/header');
+        echo view('admin/lista_usuarios', $data);
+        echo view('plantilla/footer');
     }
 
     /**
