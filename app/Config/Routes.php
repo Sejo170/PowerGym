@@ -24,6 +24,8 @@ $routes->get('logout', 'Login::logout'); // Cierra la sesión
 
 // Rutas de Horarios
 $routes->get('horarios', 'Horarios::index');
+$routes->post('horarios/reservar', 'Horarios::reservar'); // Cuando pulsemos al boton de reserva que funcione
+$routes->post('horarios/cancelar', 'Horarios::cancelar'); // Cuando pulsemos el boton se cancelara la reserva
 
 // --------------
 // RUTA PRIVADA
@@ -34,12 +36,10 @@ $routes->get('horarios', 'Horarios::index');
 $routes->group('admin', ['filter' => 'authGuard'], function($routes) {
     
     // 1. La página principal del panel
-    // URL: tudominio.com/admin
     // Llama a: Controlador Admin, función index
     $routes->get('/', 'Admin::index');
 
     // 2. Ruta para borrar usuario
-    // URL: tudominio.com/admin/borrarUsuario/5
     // (:num) es un comodín que acepta solo números
     $routes->post('borrarUsuario/(:num)', 'Admin::borrarUsuario/$1');
 
@@ -49,8 +49,8 @@ $routes->group('admin', ['filter' => 'authGuard'], function($routes) {
     $routes->post('cambiarRol/(:num)/(:num)', 'Admin::cambiarRol/$1/$2');
 
     // --- GESTIÓN DE CLASES ---
-    $routes->get('clases', 'Clases::index');           // Ver la lista
-    $routes->get('clases/crear', 'Clases::crear');     // Ver el formulario
+    $routes->get('clases', 'Clases::index'); // Ver la lista
+    $routes->get('clases/crear', 'Clases::crear'); // Ver el formulario
     $routes->post('clases/guardar', 'Clases::guardar'); // Recibir los datos (POST)
     $routes->get('clases/borrar/(:num)', 'Clases::borrar/$1'); // Borrar clase
     $routes->post('clases/actualizar', 'Clases::actualizar'); // Actualizar las clases

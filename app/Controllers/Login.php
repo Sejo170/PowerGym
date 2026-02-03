@@ -38,12 +38,10 @@ class Login extends BaseController
         //    * password_verify compara la contraseña escrita con el HASH de la base de datos.
         if ($usuario && password_verify($password, $usuario['password'])) {
             
-            // --- ¡ÉXITO! ---
-            
             // 4. Creamos la SESIÓN (El "Carnet de Identidad")
             // Guardamos los datos importantes para que el sistema sepa quién es
             $datosSesion = [
-                'id'       => $usuario['id'],       // CRÍTICO: Esto usa el Admin.php para protegerse
+                'id'       => $usuario['id'],
                 'nombre'   => $usuario['nombre'],
                 'id_rol'   => $usuario['id_rol'],   // Para saber si es admin, cliente, etc.
                 'is_logged_in' => true              // Una marca para saber que está dentro
