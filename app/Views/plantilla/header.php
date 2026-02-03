@@ -47,11 +47,11 @@
                                     
                                     <!--- Para que solo lo puedan ver los que son ADMINS --->
                                     <?php if ($rol == 1): ?>
-                                        <li><a class="dropdown-item" href="<?= base_url('admin') ?>">👥 Usuarios</a></li>
+                                        <li><a class="dropdown-item" href="<?= base_url('admin/usuarios') ?>">👥 Usuarios</a></li>
                                         <li><a class="dropdown-item" href="<?= base_url('admin/clases') ?>">📝 Editar Clases</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><span class="dropdown-header">Reportes</span></li>
-                                        <li><a class="dropdown-item" href="#">📊 Estadísticas</a></li>
+                                        <li><a class="dropdown-item" href="<?= base_url('admin') ?>">📊 Estadísticas</a></li>
                                     <?php endif; ?>
 
                                     <!--- Para que solo lo puedan ver los que son ENTRENADORES --->

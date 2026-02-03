@@ -39,14 +39,20 @@ $routes->group('admin', ['filter' => 'authGuard'], function($routes) {
     // Llama a: Controlador Admin, función index
     $routes->get('/', 'Admin::index');
 
-    // 2. Ruta para borrar usuario
+    // 2. Para mostrar la lista de usuarios
+    $routes->get('usuarios', 'Admin::usuarios');
+
+    // 3. Ruta para borrar usuario
     // (:num) es un comodín que acepta solo números
     $routes->post('borrarUsuario/(:num)', 'Admin::borrarUsuario/$1');
 
-    // 3. Ruta para cambiar el rol
+    // 4. Ruta para cambiar el rol
     // URL: tudominio.com/admin/cambiarRol/5/4
     // Aquí esperamos dos números: ID del usuario y ID del nuevo rol
     $routes->post('cambiarRol/(:num)/(:num)', 'Admin::cambiarRol/$1/$2');
+
+    // API para las gráficas
+    $routes->get('datosGrafica', 'Admin::datosGrafica');
 
     // --- GESTIÓN DE CLASES ---
     $routes->get('clases', 'Clases::index'); // Ver la lista

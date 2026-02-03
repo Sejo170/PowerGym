@@ -8,8 +8,17 @@ use App\Models\UsuarioModel;
 
 class Admin extends BaseController
 {
-    // Muestra la lista de todos los usuarios.
+    // Muestra la dashboard
     public function index()
+    {
+        // Cargamos la vista
+        echo view('plantilla/header');
+        echo view('admin/dashboard');
+        echo view('plantilla/footer');
+    }
+
+    // Muestra la lista de todos los usuarios.
+    public function usuarios()
     {
         // Instanciamos el modelo ("llamamos al portero")
         $usuarioModel = new UsuarioModel();
@@ -50,9 +59,9 @@ class Admin extends BaseController
         // Verificamos si el usuario existe antes de intentar borrar
         if($usuarioModel->find($idUsuarioParaBorrar)) {
             $usuarioModel->delete($idUsuarioParaBorrar);
-            return redirect()->to('/admin')->with('mensaje_exito', 'Usuario eliminado correctamente.');
+            return redirect()->to('/admin/usuarios')->with('mensaje_exito', 'Usuario eliminado correctamente.');
         } else {
-            return redirect()->to('/admin')->with('mensaje_error', 'El usuario no existe.');
+            return redirect()->to('/admin/usuarios')->with('mensaje_error', 'El usuario no existe.');
         }
     }
 
@@ -90,5 +99,24 @@ class Admin extends BaseController
         ]);
 
         return redirect()->back()->with('mensaje_exito', 'Rol actualizado correctamente.');
+    }
+
+    // Funcion para la API
+    public function datosGrafica()
+    {
+        $db = \Config\Database::connect();
+        $builder = $db->table('clases');
+
+        // Seleccionamos el nombre y contamos las reservas
+        $builder->select('clases.nombre, COUNT(reservas.id) as total'); 
+
+        // Unimos y Agrupamos
+        $builder->join('reservas', 'reservas.id_clase = clases.id', 'left');
+        $builder->groupBy('clases.id');
+        
+        // Obtenemos los datos y los enviamos como JSON
+        $data = $builder->get()->getResultArray();
+
+        return $this->response->setJSON($data);
     }
 }
