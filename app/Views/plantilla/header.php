@@ -28,19 +28,17 @@
                 <ul class="navbar-nav ms-auto">
                     <?php if (session()->get('is_logged_in')): ?>
                         
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= base_url('tienda') ?>">
+                                🛍️ Tienda
+                            </a>
+                        </li>
+                        
                         <!--- Para que solo lo puedan ver los que son ADMINS, ENTRENADORES, SOCIOS --->
                         <?php if ($rol == 1 || $rol == 2 || $rol == 4): ?>
                             <li class="nav-item">
                                 <a class="nav-link" href="<?= base_url('horarios') ?>">
                                     📅 <?= ($rol == 4) ? 'Reservar Clases' : 'Clases' ?>
-                                </a>
-                            </li>
-                        <?php endif; ?>
-
-                        <?php if ($rol == 1 || $rol == 2): ?>
-                            <li class="nav-item">
-                                <a class="nav-link" href="<?= base_url('admin/productos') ?>">
-                                    📦 Inventario
                                 </a>
                             </li>
                         <?php endif; ?>
@@ -57,6 +55,7 @@
                                     <?php if ($rol == 1): ?>
                                         <li><a class="dropdown-item" href="<?= base_url('admin/usuarios') ?>">👥 Usuarios</a></li>
                                         <li><a class="dropdown-item" href="<?= base_url('admin/clases') ?>">📝 Editar Clases</a></li>
+                                        <li><a class="dropdown-item" href="<?= base_url('admin/productos') ?>">📦 Inventario</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><span class="dropdown-header">Reportes</span></li>
                                         <li><a class="dropdown-item" href="<?= base_url('admin') ?>">📊 Estadísticas</a></li>
@@ -65,6 +64,7 @@
                                     <!--- Para que solo lo puedan ver los que son ENTRENADORES --->
                                     <?php if ($rol == 2): ?>
                                         <li><a class="dropdown-item" href="<?= base_url('admin/clases') ?>">📝 Editar Clases</a></li>
+                                        <li><a class="dropdown-item" href="<?= base_url('admin/productos') ?>">📦 Inventario</a></li>
                                     <?php endif; ?>
 
                                 </ul>

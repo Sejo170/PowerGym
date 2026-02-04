@@ -27,6 +27,9 @@ $routes->get('horarios', 'Horarios::index');
 $routes->post('horarios/reservar', 'Horarios::reservar'); // Cuando pulsemos al boton de reserva que funcione
 $routes->post('horarios/cancelar', 'Horarios::cancelar'); // Cuando pulsemos el boton se cancelara la reserva
 
+// Rutas de Tienda
+$routes->get('tienda', 'Tienda::index');
+
 // --------------
 // RUTA PRIVADA
 // --------------
@@ -58,6 +61,9 @@ $routes->group('admin', ['filter' => 'authGuard'], function($routes) {
     $routes->get('productos', 'Productos::index');
     $routes->get('productos/crear', 'Productos::crear');
     $routes->post('productos/guardar', 'Productos::guardar');
+    $routes->get('productos/borrar/(:num)', 'Productos::borrar/$1');
+    $routes->get('productos/editar/(:num)', 'Productos::editar/$1');
+    $routes->post('productos/actualizar', 'Productos::actualizar');
     
     // (Opcionales para cuando programes borrar/editar)
     $routes->delete('productos/borrar/(:num)', 'Productos::borrar/$1');
