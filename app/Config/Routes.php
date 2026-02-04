@@ -54,6 +54,15 @@ $routes->group('admin', ['filter' => 'authGuard'], function($routes) {
     // API para las gráficas
     $routes->get('datosGrafica', 'Admin::datosGrafica');
 
+    // --- GESTIÓN DE PRODUCTOS ---
+    $routes->get('productos', 'Productos::index');
+    $routes->get('productos/crear', 'Productos::crear');
+    $routes->post('productos/guardar', 'Productos::guardar');
+    
+    // (Opcionales para cuando programes borrar/editar)
+    $routes->delete('productos/borrar/(:num)', 'Productos::borrar/$1');
+    $routes->get('productos/editar/(:num)', 'Productos::editar/$1');
+
     // --- GESTIÓN DE CLASES ---
     $routes->get('clases', 'Clases::index'); // Ver la lista
     $routes->get('clases/crear', 'Clases::crear'); // Ver el formulario

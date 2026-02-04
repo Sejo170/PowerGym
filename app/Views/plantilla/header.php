@@ -37,6 +37,14 @@
                             </li>
                         <?php endif; ?>
 
+                        <?php if ($rol == 1 || $rol == 2): ?>
+                            <li class="nav-item">
+                                <a class="nav-link" href="<?= base_url('admin/productos') ?>">
+                                    📦 Inventario
+                                </a>
+                            </li>
+                        <?php endif; ?>
+
                         <!--- Para que solo lo puedan ver los que son ADMINS y ENTRENADORES --->
                         <?php if ($rol == 1 || $rol == 2): ?>
                             <li class="nav-item dropdown">
