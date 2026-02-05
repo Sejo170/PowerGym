@@ -25,13 +25,13 @@
                             </h6>
 
                             <div class="d-flex justify-content-between align-items-center px-3">
-                                <span class="badge bg-success rounded-pill px-3 py-2">
+                                <span id="plazas-<?= $clase['id'] ?>" class="badge bg-success rounded-pill px-3 py-2">
                                     <?= $clase['plazas_totales'] ?> Plazas
                                 </span>
 
                                 <?php if (in_array($clase['id'], $mis_reservas)): ?>
 
-                                    <form action="<?= base_url('horarios/cancelar') ?>" method="post">
+                                    <form action="<?= base_url('horarios/cancelar') ?>" method="post" class="form-reserva">
                                         <input type="hidden" name="id_clase" value="<?= $clase['id'] ?>">
                                         <button type="submit" class="btn btn-outline-danger btn-sm">
                                             ❌ Cancelar
@@ -40,7 +40,7 @@
 
                                 <?php else: ?>
 
-                                    <form action="<?= base_url('horarios/reservar') ?>" method="post">
+                                    <form action="<?= base_url('horarios/reservar') ?>" method="post" class="form-reserva">
                                         <input type="hidden" name="id_clase" value="<?= $clase['id'] ?>">
                                         <button type="submit" class="btn btn-outline-primary btn-sm">Reservar</button>
                                     </form>
@@ -54,3 +54,45 @@
         <?php endif; ?>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    // 1. Seleccionamos todos los formularios de reserva/cancelación
+        const formularios = document.querySelectorAll('.form-reserva');
+
+        formularios.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                // 2. IMPORTANTE: Evitamos que la página se recargue
+                e.preventDefault();
+
+                // 3. Preparamos los datos y la URL
+                const url = this.action;
+                const datos = new FormData(this);
+
+                // 4. Enviamos la petición con Fetch
+                fetch(url, {
+                    method: 'POST',
+                    body: datos,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest' // Para que CI4 sepa que es AJAX
+                    }
+                })
+                .then(response => response.json()) // Convertimos la respuesta a JSON
+                .then(data => {
+                    // 5. Aquí recibimos lo que enviaste desde el controlador ($datos)
+                    if(data.status === 'success') {
+                        alert("✅ " + data.mensaje);
+                        // Aquí luego haremos que cambie el botón sin recargar
+                        location.reload(); // De momento recargamos para ver el cambio
+                    } else {
+                        alert("❌ " + data.mensaje);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Ocurrió un error inesperado.");
+                });
+            });
+        });
+    });
+</script>

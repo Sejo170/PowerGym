@@ -66,14 +66,20 @@ class Horarios extends BaseController
                 'id_usuario' => $idUsuario,
                 'id_clase'   => $idClase
             ];
-            $reservasModel->insert($datosReserva);
-
-            // B) ¡ÉXITO! Redirigimos con mensaje positivo
-            return redirect()->to('/horarios')->with('mensaje', '¡Reserva confirmada con éxito!');
+            // B) ¡CAMBIO AQUÍ! En lugar de redirect, devolvemos JSON
+            $datos = [
+                'status' => 'success',
+                'mensaje' => '¡Reserva confirmada con éxito!'
+            ];
+            return $this->response->setJSON($datos);
 
         } else {
             // C) No hay sitio: Error
-            return redirect()->back()->with('mensaje_error', '¡Lo sentimos! La clase está llena.');
+            $datos = [
+                'status' => 'error',
+                'mensaje' => '¡Lo sentimos! La clase está llena.'
+            ];
+            return $this->response->setJSON($datos);
         }
     }
 
