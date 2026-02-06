@@ -30,6 +30,11 @@ $routes->post('horarios/cancelar', 'Horarios::cancelar'); // Cuando pulsemos el 
 
 // Rutas de Tienda
 $routes->get('tienda', 'Tienda::index');
+$routes->get('tienda/agregar/(:num)', 'Tienda::agregar/$1');
+
+// Carrito Compra
+$routes->get('carrito', 'Carrito::index');
+
 
 // --------------
 // RUTA PRIVADA

@@ -49,11 +49,29 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="<?= base_url('/#contacto') ?>">Contacto</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= base_url('tienda') ?>">
+                            🛍️ Tienda
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="<?= base_url('carrito') ?>">
+                            🛒 Mi Carrito
+                            
+                            <?php 
+                                $carrito = session()->get('carrito'); 
+                                $cantidad = ($carrito) ? count($carrito) : 0; 
+                            ?>
+                            
+                            <?php if($cantidad > 0): ?>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    <?= $cantidad ?>
+                                </span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
                     <?php if (session()->get('is_logged_in')): ?>
-                        
-                        <li class="nav-item"><a class="nav-link" href="<?= base_url('/#contacto') ?>">Contacto</a></li>
-                        <li class="nav-item"><a class="nav-link" href="<?= base_url('tienda') ?>">🛍️ Tienda</a></li>
-                        
                         <?php if (in_array($rol, [1, 2, 4])): ?>
                             <li class="nav-item">
                                 <a class="nav-link" href="<?= base_url('horarios') ?>">
