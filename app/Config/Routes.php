@@ -7,6 +7,7 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 $routes->get('/', 'Home::index');
+$routes->get('home/obtenerFrase', 'Home::obtenerFrase'); // API Frase Motivadora
 
 // --------------
 // RUTAS PUBLICAS
