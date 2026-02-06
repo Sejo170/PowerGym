@@ -54,6 +54,14 @@
                 <a href="<?= base_url('login') ?>" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill fw-bold">Ya soy socio</a>
             </div>
         <?php endif; ?>
+        <div class="mt-4">
+            <blockquote id="frase-motivacion" class="blockquote text-white fst-italic">
+                <p class="mb-0 fs-5">Cargando motivación... 🔋</p>
+            </blockquote>
+            <figcaption id="autor-frase" class="blockquote-footer text-white-50 mt-1">
+                PowerGym
+            </figcaption>
+        </div>
     </div>
 </div>
 
@@ -112,3 +120,22 @@
         </div>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Llamamos a TU servidor (al puente que creamos en Home.php)
+    fetch('<?= base_url('home/obtenerFrase') ?>')
+        .then(response => response.json())
+        .then(data => {
+            // 2. Si la API nos devuelve una frase ('q' = quote)
+            if (data.q) {
+                document.getElementById('frase-motivacion').innerHTML = `"${data.q}"`;
+                document.getElementById('autor-frase').innerText = data.a; // 'a' = autor
+            }
+        })
+        .catch(error => {
+            console.log("No se pudo cargar la frase", error);
+            // Frase de respaldo por si falla algo
+            document.getElementById('frase-motivacion').innerText = "El dolor de hoy es la fuerza de mañana.";
+        });
+});
+</script>

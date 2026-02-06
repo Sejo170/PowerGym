@@ -3,17 +3,28 @@
 namespace App\Controllers;
 
 // 1. Importamos el Modelo
-// Esto es vital: sin esta línea, el controlador no sabe que existe "UsuarioModel"
 use App\Models\UsuarioModel;
+use App\Models\ProductosModel;
+use App\Models\ClasesModel;
 
 class Admin extends BaseController
 {
-    // Muestra la dashboard
+    // Muestra la dashboard con DATOS REALES
     public function index()
     {
-        // Cargamos la vista
+        // 1. Instanciamos los modelos
+        $usuarioModel   = new UsuarioModel();
+        $productosModel = new ProductosModel();
+        $clasesModel    = new ClasesModel();
+
+        // 2. Pedimos los conteos totales
+        $data['total_usuarios']  = $usuarioModel->countAll();
+        $data['total_productos'] = $productosModel->countAll();
+        $data['total_clases']    = $clasesModel->countAll();
+
+        // 3. Cargamos la vista (ESTO YA LO TIENES, NO LO BORRES)
         echo view('plantilla/header');
-        echo view('admin/dashboard');
+        echo view('admin/dashboard', $data); 
         echo view('plantilla/footer');
     }
 

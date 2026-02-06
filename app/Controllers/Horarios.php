@@ -1,11 +1,11 @@
 <?php
 
 namespace App\Controllers;
-
 use App\Models\ClasesModel;
 
 class Horarios extends BaseController
 {
+
     public function index()
     {
         $session = session();
@@ -22,13 +22,26 @@ class Horarios extends BaseController
         $clasesModel = new \App\Models\ClasesModel();
         $reservasModel = new \App\Models\ReservasModel();
 
-        // 3. OBTENER CLASES + NOMBRE DEL ENTRENADOR (JOIN) 👇
-        $data['clases'] = $clasesModel->select('clases.*, usuarios.nombre as nombre_entrenador')
+        // 3. Obtener clases
+        $clases = $clasesModel->select('clases.*, usuarios.nombre as nombre_entrenador')
             ->join('usuarios', 'usuarios.id = clases.id_entrenador')
             ->orderBy('fecha_hora', 'ASC')
             ->findAll();
 
-        // 4. Obtener reservas del usuario actual (para los botones)
+        // --- CÁLCULO DE PLAZAS LIBRES (NUEVO) ---
+        // Recorremos cada clase para calcular cuántas plazas quedan
+        foreach ($clases as &$clase) {
+            // Contamos cuántas reservas tiene esta clase específica
+            $numReservas = $reservasModel->where('id_clase', $clase['id'])->countAllResults();
+            
+            // Calculamos: Totales - Ocupadas = Libres
+            $clase['plazas_libres'] = $clase['plazas_totales'] - $numReservas;
+        }
+        // ----------------------------------------
+
+        $data['clases'] = $clases;
+
+        // 4. Obtener reservas del usuario actual
         $idUsuario = $session->get('id');
         $misReservas = $reservasModel->where('id_usuario', $idUsuario)->findColumn('id_clase');
         $data['mis_reservas'] = $misReservas ?? [];
@@ -66,20 +79,15 @@ class Horarios extends BaseController
                 'id_usuario' => $idUsuario,
                 'id_clase'   => $idClase
             ];
-            // B) ¡CAMBIO AQUÍ! En lugar de redirect, devolvemos JSON
-            $datos = [
-                'status' => 'success',
-                'mensaje' => '¡Reserva confirmada con éxito!'
-            ];
-            return $this->response->setJSON($datos);
+
+            $reservasModel->insert($datosReserva);
+
+            // B) ¡ÉXITO! Redirigimos con mensaje positivo
+            return redirect()->to('/horarios')->with('mensaje', '¡Reserva confirmada con éxito!');
 
         } else {
             // C) No hay sitio: Error
-            $datos = [
-                'status' => 'error',
-                'mensaje' => '¡Lo sentimos! La clase está llena.'
-            ];
-            return $this->response->setJSON($datos);
+            return redirect()->back()->with('mensaje_error', '¡Lo sentimos! La clase está llena.');
         }
     }
 

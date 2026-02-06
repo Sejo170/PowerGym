@@ -20,7 +20,7 @@
                     <div class="card-body">
                         <h6 class="text-uppercase text-muted small">Usuarios Registrados</h6>
                         <h2 class="display-6 fw-bold text-primary">
-                            <?= $total_usuarios ?? 0 ?>
+                            <?= $total_usuarios ?>
                         </h2>
                     </div>
                 </div>
@@ -31,7 +31,7 @@
                     <div class="card-body">
                         <h6 class="text-uppercase text-muted small">Productos en Tienda</h6>
                         <h2 class="display-6 fw-bold text-success">
-                            <?= $total_productos ?? 0 ?>
+                            <?= $total_productos ?>
                         </h2>
                     </div>
                 </div>
@@ -42,7 +42,7 @@
                     <div class="card-body">
                         <h6 class="text-uppercase text-muted small">Clases Activas</h6>
                         <h2 class="display-6 fw-bold text-warning">
-                            <?= $total_clases ?? 0 ?>
+                            <?= $total_clases ?>
                         </h2>
                     </div>
                 </div>
