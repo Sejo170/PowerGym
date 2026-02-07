@@ -72,6 +72,11 @@
 
                                     <div class="mt-auto">
                                         <h4 class="text-primary fw-bold mb-3"><?= esc($producto['precio']) ?> €</h4>
+                                        <?php if($producto['stock'] > 0): ?>
+                                            <p class="small text-muted mb-3">Quedan: <?= $producto['stock'] ?> unidades</p>
+                                        <?php else: ?>
+                                            <p class="small text-muted mb-3">Proximamente!!!!</p>
+                                        <?php endif; ?>
 
                                         <?php if($is_logged_in): ?>
                                             

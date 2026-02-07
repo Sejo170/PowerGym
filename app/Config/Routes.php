@@ -34,6 +34,9 @@ $routes->get('tienda/agregar/(:num)', 'Tienda::agregar/$1');
 
 // Carrito Compra
 $routes->get('carrito', 'Carrito::index');
+$routes->get('carrito/confirmar', 'Carrito::confirmar');
+$routes->get('carrito/eliminar/(:num)', 'Carrito::eliminar/$1');
+$routes->post('carrito/actualizar', 'Carrito::actualizar');
 
 
 // --------------
