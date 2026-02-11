@@ -2,26 +2,55 @@
 
 namespace App\Controllers;
 
+// Importamos los modelos
 use App\Models\ProductosModel;
 use App\Models\CategoriasModel;
 
 class Productos extends BaseController
 {
+    // Funcion para mostrar una tabla con los productos y filtros
     public function index()
     {
+        // Instanciamos el modelp
         $productosModel = new ProductosModel();
 
-        // Traemos productos + nombre de categoría
-        $data['productos'] = $productosModel->select('productos.*, categorias.nombre_categoria')
-                                            ->join('categorias', 'categorias.id = productos.id_categoria')
-                                            ->findAll();
+        // Capturamos los datos de la URL con el GET
+        $nombre     = $this->request->getGet('nombre');
+        $categoria  = $this->request->getGet('categoria');
+        $precio_max = $this->request->getGet('precio_max');
+
+        // Construimos la consulta (sin traer los datos todavía)
+        $productosModel->select('productos.*, categorias.nombre_categoria')
+                    ->join('categorias', 'categorias.id = productos.id_categoria');
+
+        // Aplicamos filtros
+
+        // Si hemos elegido alguna categoria
+        if ($categoria) {
+            $productosModel->where('productos.id_categoria', $categoria);
+        }
+
+        // Si el usuario escribió un precio máximo...
+        if ($precio_max) {
+            $productosModel->where('productos.precio <=', $precio_max);
+        }
+
+        // --- AQUÍ FALTA EL FILTRO DEL NOMBRE ---
+        // Si el usuario escribió algo en el nombre...
+        // Si el usuario escribió algo en el nombre...
+        if ($nombre) {
+            $productosModel->like('productos.nombre', $nombre);
+        }
+
+        // 4. Finalmente, ejecutamos la consulta
+        $data['productos'] = $productosModel->findAll();
 
         echo view('plantilla/header');
-        // OJO AQUÍ: La ruta ahora incluye la carpeta 'productos'
         echo view('admin/productos/lista_productos', $data);
         echo view('plantilla/footer');
     }
 
+    // Funcion para crear productos
     public function crear()
     {
         $categoriasModel = new CategoriasModel();
@@ -29,15 +58,14 @@ class Productos extends BaseController
         $data['categorias'] = $categoriasModel->findAll();
 
         echo view('plantilla/header');
-        // OJO AQUÍ TAMBIÉN
         echo view('admin/productos/crear_producto', $data);
         echo view('plantilla/footer');
     }
 
-    // GUARDAR EL PRODUCTO
+    // Funcion para guardar el producto
     public function guardar()
     {
-        // 1. Validamos
+        // Validamos
         $validacion = $this->validate([
             'nombre'       => 'required|min_length[3]',
             'descripcion'  => 'required',
@@ -55,12 +83,12 @@ class Productos extends BaseController
             return redirect()->back()->withInput()->with('mensaje_error', 'Revisa los datos del formulario.');
         }
 
-        // 2. Procesamos la imagen
+        // Procesamos la imagen
         $img = $this->request->getFile('imagen');
         $nombreImagen = $img->getRandomName();
         $img->move(ROOTPATH . 'public/uploads/productos', $nombreImagen);
 
-        // 3. Guardamos
+        // Guardamos los datos
         $datos = [
             'nombre'       => $this->request->getPost('nombre'),
             'descripcion'  => $this->request->getPost('descripcion'),
@@ -70,37 +98,39 @@ class Productos extends BaseController
             'imagen'       => $nombreImagen 
         ];
 
+        // Instanciamos y guardamos
         $productosModel = new ProductosModel();
         $productosModel->save($datos);
 
-        // Redirigimos a la lista (que ahora está en admin/productos)
+        // Redirigimos a la lista mostrando un mensaje de exito
         return redirect()->to(base_url('admin/productos'))->with('mensaje_exito', '¡Producto creado correctamente!');
     }
 
-    // Recibimos el $id como parámetro (ej: borrar/5)
+    // Funcion para borrar el producto
     public function borrar($id)
     {
+        // Instanciamos el modelo
         $productosModel = new ProductosModel();
 
-        // 1. Buscamos los datos del producto antes de borrarlo
+        // Buscamos los datos del producto antes de borrarlo
         $datosProducto = $productosModel->find($id);
 
-        // 2. Si el producto existe y tiene una imagen guardada...
+        // Si el producto existe y tiene una imagen guardada la borramos de la carpeta del servidor
         if (isset($datosProducto['imagen']) && file_exists(ROOTPATH . 'public/uploads/productos/' . $datosProducto['imagen'])) {
-            // ...la borramos de la carpeta del servidor
             unlink(ROOTPATH . 'public/uploads/productos/' . $datosProducto['imagen']);
         }
 
-        // 3. Ahora sí, borramos el registro de la base de datos
+        // Borramos el registro de la base de datos
         $productosModel->delete($id);
 
-        // 4. Redirigimos a la lista con un mensaje
+        // Redirigimos a la tabla mostrando un mensaje de exito
         return redirect()->to(base_url('admin/productos'))->with('mensaje_exito', 'Producto y su imagen eliminados correctamente.');
     }
 
-    // EDITAR EL PRODUCTO
+    // Funcion para editar el producto
     public function editar($id)
     {
+        // Instanciamos los modelos
         $productosModel = new ProductosModel();
         $categoriasModel = new CategoriasModel();
 
@@ -115,9 +145,10 @@ class Productos extends BaseController
         echo view('plantilla/footer');
     }
 
-    // ACTUALIZAR PRODUCTO
+    // Funcion para ACTUALIZAR EL PRODUCTO
     public function actualizar()
     {
+        // Instanciamos el modelo
         $productosModel = new ProductosModel();
         
         // Recogemos el ID oculto del formulario
@@ -132,32 +163,31 @@ class Productos extends BaseController
             'id_categoria' => $this->request->getPost('id_categoria'),
         ];
 
-        // --- Lógica de la Imagen ---
+        // Lógica de la Imagen
         $img = $this->request->getFile('imagen');
 
-        // Solo si se ha subido una imagen nueva y es válida...
+        // Solo si se ha subido una imagen nueva y es válida
         if ($img && $img->isValid() && !$img->hasMoved()) {
             
-            // 1. Validamos que sea imagen (opcional pero recomendable)
+            // Validamos que sea imagen
             $validacion = $this->validate([
                 'imagen' => 'uploaded[imagen]|max_size[imagen,2048]|is_image[imagen]'
             ]);
 
             if ($validacion) {
-                // 2. Subimos la nueva
+                // Subimos la nueva
                 $nuevoNombre = $img->getRandomName();
                 $img->move(ROOTPATH . 'public/uploads/productos', $nuevoNombre);
 
-                // 3. Añadimos el nombre al array de datos para que se actualice
+                // Añadimos el nombre al array de datos para que se actualice
                 $datos['imagen'] = $nuevoNombre;
-
-                // (Opcional) Aquí podrías borrar la imagen vieja si quisieras limpiar el servidor
             }
         }
 
         // Actualizamos en la base de datos
         $productosModel->update($id, $datos);
 
+        // Redirigimos con un mostrando un mensaje de exito
         return redirect()->to(base_url('admin/productos'))->with('mensaje_exito', 'Producto actualizado correctamente.');
     }
 }

@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 class Home extends BaseController
 {
+    // Funcion para mostrar la web principal
     public function index()
     {
         echo view('plantilla/header');
@@ -11,24 +12,24 @@ class Home extends BaseController
         echo view('plantilla/footer');
     }
 
-    // Función para obtener la frase vía AJAX
+    // Función para obtener la frase por AJAX
     public function obtenerFrase()
     {
-        // Iniciamos cURL (una herramienta más potente para hacer peticiones)
+        // Iniciamos CURL
         $ch = curl_init();
         
         // Configuramos la dirección de la API
         curl_setopt($ch, CURLOPT_URL, "https://zenquotes.io/api/random/");
         // Queremos que nos devuelva el resultado, no que lo imprima directo
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        // 🚑 TRUCO: Ignoramos la verificación de certificados SSL (solo para localhost)
+        // Ignoramos la verificación de certificados SSL (solo para localhost)
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
         
         // Ejecutamos y cerramos
         $json = curl_exec($ch);
         curl_close($ch);
 
-        // Si falló y no trajo nada, devolvemos un error vacío
+        // Si falla y no muestra nada, mostramos un error vacío
         if (!$json) {
             return $this->response->setJSON([]); 
         }

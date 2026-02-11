@@ -14,6 +14,33 @@
         </div>
     <?php endif; ?>
 
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <form action="<?= base_url('admin/usuarios') ?>" method="get">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <label class="col-form-label fw-bold">Filtrar por Rol:</label>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="rol" class="form-select">
+                            <option value="">Ver todos</option>
+                            <option value="1" <?= (isset($_GET['rol']) && $_GET['rol'] == '1') ? 'selected' : '' ?>>Admin</option>
+                            <option value="2" <?= (isset($_GET['rol']) && $_GET['rol'] == '2') ? 'selected' : '' ?>>Entrenador</option>
+                            <option value="3" <?= (isset($_GET['rol']) && $_GET['rol'] == '3') ? 'selected' : '' ?>>Cliente</option>
+                            <option value="4" <?= (isset($_GET['rol']) && $_GET['rol'] == '4') ? 'selected' : '' ?>>Socio Gym</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">Filtrar</button>
+                        <?php if(isset($_GET['rol'])): ?>
+                            <a href="<?= base_url('admin/usuarios') ?>" class="btn btn-outline-secondary">Limpiar</a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="table-responsive">
         <table class="table table-striped table-hover table-bordered">
             <thead class="table-dark">

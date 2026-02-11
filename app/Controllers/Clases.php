@@ -2,32 +2,51 @@
 
 namespace App\Controllers;
 
+// Importo los modelos
 use App\Controllers\BaseController;
 use App\Models\ClasesModel;
 
 class Clases extends BaseController
 {
+    // Funcion para mostrar una tabla con las clases
     public function index()
     {
-        // 1. Instanciamos el Modelo
+        // Instanciamos el modelo
         $clasesModel = new ClasesModel();
+        
+        // 1. Cargamos el modelo de Usuarios para llenar el desplegable
+        $usuarioModel = new \App\Models\UsuarioModel();
+        $data['entrenadores'] = $usuarioModel->where('id_rol', 2)->findAll();
 
-        // 2. Obtenemos todas las clases de la base de datos
-        $data['clases'] = $clasesModel->obtenerClasesConEntrenador();
+        // 2. Capturamos el filtro de la URL usando el GET
+        $filtroEntrenador = $this->request->getGet('entrenador_id');
 
-        // 3. Cargamos la vista (y le pasamos los datos)
+        // 3. Construimos la consulta para poder filtrar
+        // Seleccionamos los datos de la clase y los nombres del entrenador
+        $clasesModel->select('clases.*, usuarios.nombre as nombre_entrenador, usuarios.apellidos as apellidos_entrenador')
+                    ->join('usuarios', 'usuarios.id = clases.id_entrenador');
+
+        // 4. Si hay filtro seleccionado, lo aplicamos
+        if ($filtroEntrenador) {
+            $clasesModel->where('clases.id_entrenador', $filtroEntrenador);
+        }
+
+        // 5. Ejecutar la consulta
+        $data['clases'] = $clasesModel->findAll();
+
+        // 6. Cargar vistas
         echo view('plantilla/header');
         echo view('admin/clases/lista_clases', $data);
         echo view('plantilla/footer');
     }
 
+    // Funcion para crear una clase
     public function crear()
     {
         // 1. Llamamos al modelo de Usuarios
         $usuarioModel = new \App\Models\UsuarioModel(); 
         
         // 2. Buscamos SOLO a los entrenadores
-        // Asumimos que el 'id_rol' 2 es el de los entrenadores (ajusta el número si es otro en tu BD)
         $data['entrenadores'] = $usuarioModel->where('id_rol', 2)->findAll();
 
         // 3. Cargamos la vista pasando la lista de entrenadores ($data)
@@ -36,13 +55,13 @@ class Clases extends BaseController
         echo view('plantilla/footer');
     }
 
+    // Funcion para guardar la clase
     public function guardar()
     {
-        // 1. Instanciamos el modelo
+        // Instanciamos el modelo
         $clasesModel = new ClasesModel();
 
-        // 2. Creamos el paquete de datos (Array)
-        // OJO: Las palabras a la izquierda deben coincidir EXACTAMENTE con tu base de datos
+        // Creamos el paquete de datos (Array)
         $datos = [
             'nombre'         => $this->request->getPost('nombre'),
             'descripcion'    => $this->request->getPost('descripcion'),
@@ -51,13 +70,14 @@ class Clases extends BaseController
             'id_entrenador'  => $this->request->getPost('id_entrenador'),
         ];
 
-        // 3. Guardamos
+        // Guardamos los datos
         $clasesModel->save($datos);
 
-        // 4. Volvemos a la lista y mostramos mensaje de éxito (Opcional pero recomendado)
+        // Volvemos a la tabla y mostramos mensaje de éxito
         return redirect()->to('admin/clases')->with('mensaje_exito', '¡Clase creada correctamente!');
     }
 
+    // Funcion para borrar los datos
     public function borrar($id)
     {
         $clasesModel = new ClasesModel();
@@ -65,27 +85,29 @@ class Clases extends BaseController
         return redirect()->to('admin/clases')->with('mensaje_exito', 'Clase eliminada');
     }
 
+    // Funcion para Editar una clase
     public function editar($id)
     {
+        // Instanciamos los modelos
         $clasesModel = new ClasesModel();
         $usuariosModel = new \App\Models\UsuarioModel();
 
-        // 1. Recuperamos la clase existente usando su ID
+        // Recuperamos la clase existente usando su ID
         $data['clase'] = $clasesModel->find($id);
         
-        // 2. Recuperamos los entrenadores para llenar el select
+        // Recuperamos los entrenadores para llenar el select
         $data['entrenadores'] = $usuariosModel->where('id_rol', 2)->findAll();
 
-        // 3. Cargamos la vista específica de edición
+        // Cargamos la vista específica de edición
         echo view('plantilla/header');
         echo view('admin/clases/editar_clase', $data);
         echo view('plantilla/footer');
     }
 
+    // Funcion para actualizar el producto
     public function actualizar()
     {
-        // 0. VALIDACIÓN (El Portero) 🛡️
-        // Si los datos no cumplen las reglas, les impedimos pasar
+        // Si los datos no cumplen las reglas, no les dejamos pasar
         if (! $this->validate([
             'nombre'          => 'required|min_length[3]',
             'plazas_totales'  => 'required|integer|greater_than[0]',
@@ -95,12 +117,13 @@ class Clases extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
+        // Instanciamos el modelo
         $clasesModel = new ClasesModel();
 
-        // 1. Recogemos el ID
+        // Recogemos el ID
         $id = $this->request->getPost('id');
 
-        // 2. Recogemos los datos
+        // Recogemos los datos
         $datos = [
             'nombre'         => $this->request->getPost('nombre'),
             'descripcion'    => $this->request->getPost('descripcion'),
@@ -109,10 +132,10 @@ class Clases extends BaseController
             'id_entrenador'  => $this->request->getPost('id_entrenador'),
         ];
 
-        // 3. Actualizamos
+        // Actualizamos en la bd
         $clasesModel->update($id, $datos);
 
-        // 4. Redirigimos
+        // Redirigimos y mostramos un mensaje
         return redirect()->to('admin/clases')->with('mensaje_exito', '¡Clase actualizada correctamente!');
     }
 }

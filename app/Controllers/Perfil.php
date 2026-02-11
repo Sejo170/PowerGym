@@ -2,36 +2,37 @@
 
 namespace App\Controllers;
 
+// Importo los modelos
 use App\Controllers\BaseController;
 use App\Models\UsuarioModel;
 
 class Perfil extends BaseController
 {
-    // Muestra el formulario con TUS datos actuales
+    // Funcion para mostrar el formulario con tus datos actuales
     public function index()
     {
+        // Instanciamos el modelo
         $usuarioModel = new UsuarioModel();
         
-        // Obtenemos el ID de la sesión (¿Quién soy?)
+        // Obtenemos el ID de la sesión
         $idUsuario = session()->get('id');
         
         // Buscamos los datos en la BD
         $data['usuario'] = $usuarioModel->find($idUsuario);
 
-        // En lugar de: return view('perfil/editar', $data);
-    
         echo view('plantilla/header');
         echo view('perfil/editar', $data);
         echo view('plantilla/footer');
     }
 
-    // Para EDITAR los datos del usuario
+    // Funcion para editar los datos del usuario
     public function actualizar()
     {
+        // Instanciamos el model
         $usuarioModel = new UsuarioModel();
         $idUsuario = session()->get('id');
 
-        // 1. Reglas fijas (siempre se validan)
+        // Reglas fijas siempre se validan
         $rules = [
             'nombre'    => 'required|min_length[3]',
             'apellidos' => 'required|min_length[3]',
@@ -47,12 +48,12 @@ class Perfil extends BaseController
             $rules['pass_confirm'] = 'required|matches[password]';
         }
 
-        // 3. Validamos todo junto
+        // Validamos todo
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        // 4. Preparamos los datos
+        // Preparamos los datos
         $data = [
             'nombre'    => $this->request->getPost('nombre'),
             'apellidos' => $this->request->getPost('apellidos'),
@@ -64,10 +65,10 @@ class Perfil extends BaseController
             $data['password'] = password_hash($password, PASSWORD_DEFAULT);
         }
 
-        // 5. Actualizamos en BD y Sesión
+        // Actualizamos la BD y Sesión
         $usuarioModel->update($idUsuario, $data);
         
-        // Actualizamos el nombre en la sesión por si lo cambió
+        // Actualizamos el nombre en la sesión por si lo a cambiado
         session()->set('nombre', $data['nombre']);
 
         return redirect()->to('/perfil')->with('mensaje_exito', '¡Tus datos se han actualizado!');

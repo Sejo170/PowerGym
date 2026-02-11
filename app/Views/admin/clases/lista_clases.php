@@ -12,6 +12,44 @@
         </div>
     <?php endif; ?>
 
+    <div class="card mb-4">
+        <div class="card-body">
+            <form action="<?= base_url('admin/clases') ?>" method="get">
+                <div class="row align-items-end">
+                    
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Filtrar por Entrenador:</label>
+                        <select name="entrenador_id" class="form-select">
+                            <option value="">Todos los entrenadores</option>
+                            <?php if (!empty($entrenadores)): ?>
+                                <?php foreach ($entrenadores as $entrenador): ?>
+                                    <option value="<?= $entrenador['id'] ?>" <?= (isset($_GET['entrenador_id']) && $_GET['entrenador_id'] == $entrenador['id']) ? 'selected' : '' ?>>
+                                        <?= esc($entrenador['nombre']) . ' ' . esc($entrenador['apellidos']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                            </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-dark w-100">
+                            <i class="fas fa-search"></i> Filtrar
+                        </button>
+                    </div>
+
+                    <?php if(isset($_GET['entrenador_id'])): ?>
+                        <div class="col-md-2">
+                            <a href="<?= base_url('admin/clases') ?>" class="btn btn-outline-secondary w-100">
+                                Limpiar
+                            </a>
+                        </div>
+                    <?php endif; ?>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="card shadow-sm">
         <?php if (session()->getFlashdata('mensaje_exito')): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">

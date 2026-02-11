@@ -19,6 +19,52 @@
         </div>
     <?php endif; ?>
 
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+            <i class="fas fa-filter"></i> Filtrar Productos
+        </div>
+        <div class="card-body">
+            <form action="<?= base_url('admin/productos') ?>" method="get">
+                <div class="row g-3">
+                    
+                    <div class="col-md-4">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" name="nombre" class="form-control" placeholder="Ej: Mancuernas..." value="<?= isset($_GET['nombre']) ? $_GET['nombre'] : '' ?>">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Categoría</label>
+                        <select name="categoria" class="form-select">
+                            <option value="">Todas</option>
+                            <option value="1" <?= (isset($_GET['categoria']) && $_GET['categoria'] == '1') ? 'selected' : '' ?>>Ropa</option>
+                            <option value="2" <?= (isset($_GET['categoria']) && $_GET['categoria'] == '2') ? 'selected' : '' ?>>Suplementos</option>
+                            <option value="3" <?= (isset($_GET['categoria']) && $_GET['categoria'] == '3') ? 'selected' : '' ?>>Accesorios</option>
+                            <option value="3" <?= (isset($_GET['categoria']) && $_GET['categoria'] == '4') ? 'selected' : '' ?>>Alimentacion</option>
+                            <option value="3" <?= (isset($_GET['categoria']) && $_GET['categoria'] == '5') ? 'selected' : '' ?>>Creatina</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Precio Máx.</label>
+                        <input type="number" name="precio_max" class="form-control" placeholder="Ej: 100" value="<?= isset($_GET['precio_max']) ? $_GET['precio_max'] : '' ?>">
+                    </div>
+
+                    <div class="col-md-2 d-flex align-items-end">
+                        <div class="d-grid gap-2 w-100">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                            <a href="<?= base_url('admin/productos') ?>" class="btn btn-outline-secondary btn-sm">
+                                Limpiar
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="table-responsive">
         <table class="table table-striped table-hover table-bordered align-middle">
             <thead class="table-dark">

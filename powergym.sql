@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.2
 -- https://www.phpmyadmin.net/
 --
--- Servidor: 127.0.0.1
--- Tiempo de generación: 09-02-2026 a las 18:39:42
--- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Servidor: localhost
+-- Tiempo de generación: 11-02-2026 a las 12:02:29
+-- Versión del servidor: 8.0.43-0ubuntu0.24.04.2
+-- Versión de PHP: 8.4.14
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -28,8 +28,8 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `categorias` (
-  `id` int(11) NOT NULL,
-  `nombre_categoria` varchar(255) NOT NULL
+  `id` int NOT NULL,
+  `nombre_categoria` varchar(255) COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -50,12 +50,12 @@ INSERT INTO `categorias` (`id`, `nombre_categoria`) VALUES
 --
 
 CREATE TABLE `clases` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(255) DEFAULT NULL,
-  `descripcion` text DEFAULT NULL,
+  `id` int NOT NULL,
+  `nombre` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `descripcion` text COLLATE utf8mb4_general_ci,
   `fecha_hora` datetime DEFAULT NULL,
-  `plazas_totales` int(11) DEFAULT NULL,
-  `id_entrenador` int(11) NOT NULL
+  `plazas_totales` int DEFAULT NULL,
+  `id_entrenador` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -70,7 +70,10 @@ INSERT INTO `clases` (`id`, `nombre`, `descripcion`, `fecha_hora`, `plazas_total
 (6, 'Pilates', 'Se centra en el control y fortalecimiento del “core” o centro del cuerpo, mejorando la postura y la flexibilidad.', '2026-02-23 15:30:00', 15, 11),
 (7, 'Boxeo', 'Clase que incluye entrenamiento con sacos, guantes y ejercicios de golpeo para mejorar la fuerza, coordinación y resistencia cardiovascular', '2026-02-12 20:15:00', 15, 13),
 (8, 'Defensa Personal', 'Clases que enseñan técnicas para defenderse en situaciones de riesgo, a menudo combinadas con acondicionamiento físico.', '2026-03-07 21:10:00', 15, 8),
-(9, 'Kickboxing', 'Una combinación de técnicas de boxeo y artes marciales con movimientos aeróbicos que ayudan a mejorar la fuerza y la agilidad.', '2026-03-01 19:30:00', 1, 13);
+(9, 'Kickboxing', 'Una combinación de técnicas de boxeo y artes marciales con movimientos aeróbicos que ayudan a mejorar la fuerza y la agilidad.', '2026-03-01 19:30:00', 1, 13),
+(10, 'Zumba', 'Como se mencionó antes, es una combinación de baile y ejercicio aeróbico.', '2026-02-25 14:30:00', 15, 9),
+(11, 'Aquaeróbic', 'Clases realizadas en el agua, ideales para personas con problemas articulares, ya que el agua reduce el impacto en las articulaciones.', '2026-02-27 14:30:00', 10, 2),
+(12, 'Body Pump', 'Cargas ligeras y muchas repeticiones para definir todo el cuerpo a ritmo de música, con un track por zona ', '2026-03-07 20:00:00', 20, 11);
 
 -- --------------------------------------------------------
 
@@ -79,10 +82,10 @@ INSERT INTO `clases` (`id`, `nombre`, `descripcion`, `fecha_hora`, `plazas_total
 --
 
 CREATE TABLE `lineas_pedidos` (
-  `id` int(11) NOT NULL,
-  `id_pedido` int(11) NOT NULL,
-  `id_producto` int(11) NOT NULL,
-  `cantidad` int(11) NOT NULL,
+  `id` int NOT NULL,
+  `id_pedido` int NOT NULL,
+  `id_producto` int NOT NULL,
+  `cantidad` int NOT NULL,
   `precio` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -101,7 +104,9 @@ INSERT INTO `lineas_pedidos` (`id`, `id_pedido`, `id_producto`, `cantidad`, `pre
 (8, 5, 4, 1, 27.00),
 (9, 5, 5, 1, 15.00),
 (10, 5, 6, 1, 28.00),
-(11, 6, 7, 4, 85.00);
+(11, 6, 7, 4, 85.00),
+(12, 7, 2, 1, 7.00),
+(13, 7, 3, 5, 5.00);
 
 -- --------------------------------------------------------
 
@@ -110,10 +115,10 @@ INSERT INTO `lineas_pedidos` (`id`, `id_pedido`, `id_producto`, `cantidad`, `pre
 --
 
 CREATE TABLE `pedidos` (
-  `id` int(11) NOT NULL,
-  `id_usuario` int(11) NOT NULL,
+  `id` int NOT NULL,
+  `id_usuario` int NOT NULL,
   `total` decimal(10,2) NOT NULL,
-  `fecha` datetime DEFAULT current_timestamp()
+  `fecha` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -126,7 +131,8 @@ INSERT INTO `pedidos` (`id`, `id_usuario`, `total`, `fecha`) VALUES
 (3, 1, 39.00, '2026-02-07 17:57:15'),
 (4, 1, 28.00, '2026-02-07 18:18:53'),
 (5, 1, 70.00, '2026-02-07 18:41:29'),
-(6, 1, 340.00, '2026-02-07 18:41:58');
+(6, 1, 340.00, '2026-02-07 18:41:58'),
+(7, 1, 32.00, '2026-02-11 09:19:19');
 
 -- --------------------------------------------------------
 
@@ -135,13 +141,13 @@ INSERT INTO `pedidos` (`id`, `id_usuario`, `total`, `fecha`) VALUES
 --
 
 CREATE TABLE `productos` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(255) NOT NULL,
-  `descripcion` text NOT NULL,
-  `precio` int(11) NOT NULL,
+  `id` int NOT NULL,
+  `nombre` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `descripcion` text COLLATE utf8mb4_general_ci NOT NULL,
+  `precio` int NOT NULL,
   `stock` decimal(10,0) NOT NULL,
-  `imagen` text NOT NULL,
-  `id_categoria` int(11) NOT NULL
+  `imagen` text COLLATE utf8mb4_general_ci NOT NULL,
+  `id_categoria` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -149,8 +155,8 @@ CREATE TABLE `productos` (
 --
 
 INSERT INTO `productos` (`id`, `nombre`, `descripcion`, `precio`, `stock`, `imagen`, `id_categoria`) VALUES
-(2, 'Camel blue', 'Tabaco', 7, 5, '1770216350_23e8bcbbe0e0d4b944aa.jpg', 1),
-(3, 'Toalla Gimnasio Fitness', 'Suave y absorbente para secarte durante tus sesiones o simplemente para cubrir tu banco o esterilla para evitar las marcas de sudor.', 5, 25, 'toalla.avif', 3),
+(2, 'Camel blue', 'Tabaco', 7, 4, '1770216350_23e8bcbbe0e0d4b944aa.jpg', 1),
+(3, 'Toalla Gimnasio Fitness', 'Suave y absorbente para secarte durante tus sesiones o simplemente para cubrir tu banco o esterilla para evitar las marcas de sudor.', 5, 20, 'toalla.avif', 3),
 (4, 'Cinturon', 'Cinturón Austin es un accesorio que contribuye con la seguridad del deportista y/o atleta al momento de realizar las series que involucran peso, ayudando de esta manera a que la ejecución sea perfecta y por consecuencia inmediata, obtener excelentes resultados.', 27, 4, 'cinturon.jpg', 3),
 (5, 'Esterilla Negra', 'Esterilla de entrenamiento antideslizante, perfecta para yoga, pilates, estiramientos y rutinas de suelo. Confortable, práctica y fácil de mantener en cualquier espacio fitness.', 15, 6, 'esterilla.jpg', 3),
 (6, 'Top Nike', '', 28, 12, 'topnike.jpg', 1),
@@ -202,9 +208,9 @@ INSERT INTO `productos` (`id`, `nombre`, `descripcion`, `precio`, `stock`, `imag
 --
 
 CREATE TABLE `reservas` (
-  `id` int(11) NOT NULL,
-  `id_usuario` int(11) NOT NULL,
-  `id_clase` int(11) NOT NULL
+  `id` int NOT NULL,
+  `id_usuario` int NOT NULL,
+  `id_clase` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -241,8 +247,8 @@ INSERT INTO `reservas` (`id`, `id_usuario`, `id_clase`) VALUES
 --
 
 CREATE TABLE `roles` (
-  `id` int(11) NOT NULL,
-  `nombre_rol` text DEFAULT NULL
+  `id` int NOT NULL,
+  `nombre_rol` text COLLATE utf8mb4_general_ci
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -262,13 +268,13 @@ INSERT INTO `roles` (`id`, `nombre_rol`) VALUES
 --
 
 CREATE TABLE `usuarios` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(255) NOT NULL,
-  `apellidos` varchar(255) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `password` varchar(255) NOT NULL,
+  `id` int NOT NULL,
+  `nombre` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `apellidos` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   `fecha_registro` datetime NOT NULL,
-  `id_rol` int(11) NOT NULL
+  `id_rol` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -295,7 +301,8 @@ INSERT INTO `usuarios` (`id`, `nombre`, `apellidos`, `email`, `password`, `fecha
 (18, 'socio', 'socio1', 'socio1@gmail.com', '$2y$10$zL.4ybpPzGVCqVKJgfjnouYAKpb3ZMgmt1.5RsZDO/JnZCmDpmUaK', '2026-02-09 17:29:50', 4),
 (19, 'socio', 'socio2', 'socio2@gmail.com', '$2y$10$DZDk/VJif0NBuFj4QDc.HegW5TfZC5aSdXdSbNr3aCox2Enwo3GsK', '2026-02-09 17:30:13', 4),
 (20, 'socio', 'socio3', 'socio3@gamil.com', '$2y$10$k87.GAFqmnssibYJ3C1u6ejyn5lWY3Y5RMQ01DFX7agAyiDu6AmGy', '2026-02-09 17:30:36', 4),
-(21, 'socio', 'socio4', 'socio4@gmail.com', '$2y$10$c3UvlBwfVI6Dc9Z6Q/M44OpF.hLrb7gLo6mjJvVc4fEFem2jBvV8q', '2026-02-09 17:30:58', 4);
+(21, 'socio', 'socio4', 'socio4@gmail.com', '$2y$10$c3UvlBwfVI6Dc9Z6Q/M44OpF.hLrb7gLo6mjJvVc4fEFem2jBvV8q', '2026-02-09 17:30:58', 4),
+(22, 'Leto', 'te respeto', 'leto1234@gmail.com', '$2y$12$0aamKl7Be1T6DHknWDoHnuer4QGUc6J66gKy4rYwSf4t2Wq2YDflC', '2026-02-11 08:26:08', 4);
 
 --
 -- Índices para tablas volcadas
@@ -362,49 +369,49 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `categorias`
 --
 ALTER TABLE `categorias`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `clases`
 --
 ALTER TABLE `clases`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de la tabla `lineas_pedidos`
 --
 ALTER TABLE `lineas_pedidos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT de la tabla `pedidos`
 --
 ALTER TABLE `pedidos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- AUTO_INCREMENT de la tabla `reservas`
 --
 ALTER TABLE `reservas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
 --
 ALTER TABLE `roles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- Restricciones para tablas volcadas
