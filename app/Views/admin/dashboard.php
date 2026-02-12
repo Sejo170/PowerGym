@@ -68,7 +68,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-        // 3. CONSUMO DE API (AJAX/FETCH)
+        // API (AJAX/FETCH)
         // Pedimos los datos al servidor sin recargar la página
         fetch('<?= base_url('admin/datosGrafica') ?>')
             .then(response => {

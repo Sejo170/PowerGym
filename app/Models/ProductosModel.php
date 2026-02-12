@@ -9,7 +9,6 @@ class ProductosModel extends Model
     protected $table      = 'productos';
     protected $primaryKey = 'id';
 
-    // Lista blanca de campos que permitimos guardar
     protected $allowedFields = [
         'nombre', 
         'descripcion', 

@@ -14,12 +14,12 @@ $routes->get('home/obtenerFrase', 'Home::obtenerFrase'); // API Frase Motivadora
 // --------------
 
 // Rutas de Registro
-$routes->get('register', 'Register::index');   // Muestra el formulario
-$routes->post('register/save', 'Register::save'); // Procesa el formulario
+$routes->get('register', 'Register::index');   // Muestra el formulario de registro
+$routes->post('register/save', 'Register::save'); // Procesa el formulario de registro
 
-// RUTAS DE LOGIN (Públicas - Van fuera del grupo)
+// Rutas de Login
 // Rutas de Autenticación
-$routes->get('login', 'Login::index');   // Muestra el formulario
+$routes->get('login', 'Login::index');   // Muestra el formulario del login
 $routes->post('auth', 'Login::auth');    // Procesa el formulario (Tu base_url('auth'))
 $routes->get('logout', 'Login::logout'); // Cierra la sesión
 
@@ -44,22 +44,19 @@ $routes->post('carrito/actualizar', 'Carrito::actualizar');
 // --------------
 
 // Grupo de rutas para el Administrador
-// Las direcciones que empiecen por /admin son controladas por Admin
 $routes->group('admin', ['filter' => 'authGuard'], function($routes) {
     
-    // 1. La página principal del panel
-    // Llama a: Controlador Admin, función index
+    // La página principal del panel
     $routes->get('/', 'Admin::index');
 
-    // 2. Para mostrar la lista de usuarios
+    // Para mostrar la lista de usuarios
     $routes->get('usuarios', 'Admin::usuarios');
 
-    // 3. Ruta para borrar usuario
+    // Para borrar usuario
     // (:num) es un comodín que acepta solo números
     $routes->post('borrarUsuario/(:num)', 'Admin::borrarUsuario/$1');
 
-    // 4. Ruta para cambiar el rol
-    // URL: tudominio.com/admin/cambiarRol/5/4
+    // Para cambiar el rol
     // Aquí esperamos dos números: ID del usuario y ID del nuevo rol
     $routes->post('cambiarRol/(:num)/(:num)', 'Admin::cambiarRol/$1/$2');
 
