@@ -5,7 +5,7 @@ use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\Filters\FilterInterface;
 
-class AuthBasic implements FilterInterface // <--- Nombre actualizado
+class AuthBasic implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
@@ -17,6 +17,5 @@ class AuthBasic implements FilterInterface // <--- Nombre actualizado
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
-        // Nada aquí
     }
 }

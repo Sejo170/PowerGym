@@ -16,10 +16,9 @@ class Login extends BaseController
         echo view('plantilla/footer');
     }
 
-    /**
-     * Recibe los datos del formulario y comprueba si son válidos.
-     * Esta función se ejecuta cuando pulsas "Entrar".
-     */
+    
+    // Recibe los datos del formulario y comprueba si son válidos.
+    // Esta función se ejecuta cuando pulsas "Entrar".
     public function auth()
     {
         // 1. Recogemos los datos que envió el usuario
@@ -28,15 +27,13 @@ class Login extends BaseController
 
         // 2. Buscamos el usuario en la base de datos por su email
         $usuarioModel = new UsuarioModel();
-        
-        // 'where' busca una fila donde el email coincida y 'first' nos da solo ese resultado
         $usuario = $usuarioModel->where('email', $email)->first();
 
         // 3. VERIFICACIÓN DE SEGURIDAD
         // Comprobamos si el usuario existe ($usuario)
         // Comprobamos si la contraseña coincide usando password_verify()
-        //    * IMPORTANTE: Nunca comparamos texto plano (1234 == 1234).
-        //    * password_verify compara la contraseña escrita con el HASH de la base de datos.
+        // Nunca comparamos texto plano (1234 == 1234).
+        // password_verify compara la contraseña escrita con el HASH de la base de datos.
         if ($usuario && password_verify($password, $usuario['password'])) {
             
             // 4. Creamos la SESIÓN (El "Carnet de Identidad")
@@ -44,7 +41,7 @@ class Login extends BaseController
             $datosSesion = [
                 'id'       => $usuario['id'],
                 'nombre'   => $usuario['nombre'],
-                'id_rol'   => $usuario['id_rol'],   // Para saber si es admin, cliente, etc.
+                'id_rol'   => $usuario['id_rol'],
                 'is_logged_in' => true              // Una marca para saber que está dentro
             ];
 

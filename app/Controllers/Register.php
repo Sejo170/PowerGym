@@ -20,11 +20,11 @@ class Register extends BaseController
     // Procesa el formulario y crea el usuario
     public function save()
     {
-        // 1. Validamos los datos (Reglas de seguridad)
+        // 1. Validamos los datos
         $rules = [
             'nombre'      => 'required|min_length[3]',
             'apellidos'   => 'required|min_length[3]',
-            'email'       => 'required|valid_email|is_unique[usuarios.email]', // ¡El email no se puede repetir!
+            'email'       => 'required|valid_email|is_unique[usuarios.email]',
             'password'    => 'required|min_length[4]',
             'pass_confirm'=> 'matches[password]' // Debe coincidir con el campo password
         ];
@@ -41,14 +41,14 @@ class Register extends BaseController
             'nombre'    => $this->request->getPost('nombre'),
             'apellidos' => $this->request->getPost('apellidos'),
             'email'     => $this->request->getPost('email'),
-            'password'  => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT), // 🔒 Encriptamos
-            'id_rol'    => 3 // <--- OJO AQUÍ
+            'password'  => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT), // Encriptamos
+            'id_rol'    => 3
         ];
 
         // 3. Guardamos en la base de datos
         $usuarioModel->save($data);
 
-        // 4. Éxito: Lo mandamos al login para que entre
+        // 4. Lo mandamos al login para que entre
         return redirect()->to('/login')->with('mensaje_exito', '¡Registro completado! Ahora puedes iniciar sesión.');
     }
 }

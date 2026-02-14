@@ -27,9 +27,9 @@ class Database extends Config
     public array $default = [
         'DSN'          => '',
         'hostname'     => 'localhost',
-        'username'     => 'root',
-        'password'     => '',
-        'database'     => 'powergym',
+        'username'     => 'josehernando_joseTFG',
+        'password'     => 'Powergym1234',
+        'database'     => 'josehernando_PowerGym',
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
         'pConnect'     => false,

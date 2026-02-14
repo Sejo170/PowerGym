@@ -35,14 +35,12 @@ class Productos extends BaseController
             $productosModel->where('productos.precio <=', $precio_max);
         }
 
-        // --- AQUÍ FALTA EL FILTRO DEL NOMBRE ---
-        // Si el usuario escribió algo en el nombre...
         // Si el usuario escribió algo en el nombre...
         if ($nombre) {
             $productosModel->like('productos.nombre', $nombre);
         }
 
-        // 4. Finalmente, ejecutamos la consulta
+        // Finalmente, ejecutamos la consulta
         $data['productos'] = $productosModel->findAll();
 
         echo view('plantilla/header');
