@@ -178,14 +178,13 @@
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Llamamos a TU servidor (al puente que creamos en Home.php)
     fetch('<?= base_url('home/obtenerFrase') ?>')
         .then(response => response.json())
         .then(data => {
-            // 2. Si la API nos devuelve una frase ('q' = quote)
+            // La API nos devuelve una frase
             if (data.q) {
                 document.getElementById('frase-motivacion').innerHTML = `"${data.q}"`;
-                document.getElementById('autor-frase').innerText = data.a; // 'a' = autor
+                document.getElementById('autor-frase').innerText = data.a; 
             }
         })
         .catch(error => {

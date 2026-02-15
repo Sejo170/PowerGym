@@ -78,7 +78,7 @@
                 return response.json();
             })
             .then(data => {
-                console.log("Datos recibidos:", data); // Para depurar si hace falta
+                console.log("Datos recibidos:", data);
 
                 // Preparamos los arrays para Chart.js
                 const etiquetas = data.map(item => item.nombre);
@@ -88,7 +88,7 @@
                 const ctx = document.getElementById('miGrafica').getContext('2d');
                 
                 new Chart(ctx, {
-                    type: 'bar', // Puedes probar 'line', 'pie', 'doughnut'
+                    type: 'bar', 
                     data: {
                         labels: etiquetas,
                         datasets: [{
@@ -97,7 +97,7 @@
                             backgroundColor: 'rgba(54, 162, 235, 0.6)',
                             borderColor: 'rgba(54, 162, 235, 1)',
                             borderWidth: 1,
-                            borderRadius: 5 // Bordes redondeados en las barras
+                            borderRadius: 5 
                         }]
                     },
                     options: {
@@ -107,7 +107,7 @@
                             y: {
                                 beginAtZero: true,
                                 grid: {
-                                    borderDash: [2, 2] // Líneas discontinuas queda más moderno
+                                    borderDash: [2, 2] 
                                 }
                             },
                             x: {
