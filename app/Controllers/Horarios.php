@@ -29,8 +29,10 @@ class Horarios extends BaseController
         $reservasModel = new \App\Models\ReservasModel();
 
         // Obtenemos las clases
+        // Obtenemos las clases filtrando las que ya han pasado
         $clases = $clasesModel->select('clases.*, usuarios.nombre as nombre_entrenador')
             ->join('usuarios', 'usuarios.id = clases.id_entrenador')
+            ->where('fecha_hora >=', date('Y-m-d H:i:s'))
             ->orderBy('fecha_hora', 'ASC')
             ->findAll();
 

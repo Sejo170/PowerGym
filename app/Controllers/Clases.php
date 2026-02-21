@@ -77,12 +77,43 @@ class Clases extends BaseController
         return redirect()->to('admin/clases')->with('mensaje_exito', '¡Clase creada correctamente!');
     }
 
-    // Funcion para borrar los datos
+    // Funcion para borrar los datos CON SEGURIDAD
     public function borrar($id)
     {
+        // Verificamos si hay alguien logueado por seguridad básica
+        if (!session()->get('is_logged_in')) {
+            return redirect()->to('/')->with('mensaje_error', 'Acceso denegado.');
+        }
+
         $clasesModel = new ClasesModel();
-        $clasesModel->delete($id);
-        return redirect()->to('admin/clases')->with('mensaje_exito', 'Clase eliminada');
+        
+        // 1. Buscamos la clase en la base de datos ANTES de intentar borrarla
+        $claseABorrar = $clasesModel->find($id);
+
+        // 2. Comprobamos si la clase realmente existe
+        if ($claseABorrar) {
+            
+            // Guardamos los datos del usuario actual en variables para que sea más fácil de leer
+            $rolUsuario = session()->get('id_rol');
+            $idUsuario = session()->get('id');
+
+            // 3. LA REGLA DE SEGURIDAD CLAVE:
+            // Si el usuario es un Entrenador (rol 2) Y (&&) el ID del entrenador de la clase NO coincide con el suyo (!=)
+            if ($rolUsuario == 2 && $claseABorrar['id_entrenador'] != $idUsuario) {
+                // Lo bloqueamos y le enviamos un mensaje de error
+                return redirect()->back()->with('mensaje_error', 'No tienes permiso para borrar la clase de otro entrenador.');
+            }
+
+            // Si es un Admin (rol 1) pasará de largo el 'if' anterior sin problemas.
+            // Si es el entrenador dueño de la clase, también pasará de largo.
+            
+            // 4. Borramos la clase
+            $clasesModel->delete($id);
+            return redirect()->to('admin/clases')->with('mensaje_exito', 'Clase eliminada correctamente.');
+            
+        } else {
+            return redirect()->to('admin/clases')->with('mensaje_error', 'La clase no existe.');
+        }
     }
 
     // Funcion para Editar una clase
