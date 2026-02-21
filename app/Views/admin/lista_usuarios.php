@@ -13,6 +13,11 @@
             <?= session()->getFlashdata('mensaje_error') ?>
         </div>
     <?php endif; ?>
+    <div class="mb-3">
+        <a href="<?= base_url('admin/crearUsuario') ?>" class="btn btn-success fw-bold">
+            + Añadir Nuevo Usuario
+        </a>
+    </div>
 
     <div class="card mb-3">
         <div class="card-body py-3">
@@ -70,26 +75,26 @@
                         </td>
 
                         <td>
-                            <div class="d-flex gap-2"> <?php if ($usuario['id_rol'] == 3): ?>
-                                    <form action="<?= base_url('admin/cambiarRol/' . $usuario['id'] . '/4') ?>" method="post">
-                                        <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-success btn-sm">Hacer Socio</button>
-                                    </form>
-                                <?php endif; ?>
-
-                                <?php if ($usuario['id_rol'] == 4): ?>
-                                    <form action="<?= base_url('admin/cambiarRol/' . $usuario['id'] . '/3') ?>" method="post">
-                                        <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-warning btn-sm">Quitar Socio</button>
-                                    </form>
-                                <?php endif; ?>
-
+                            <div class="d-flex gap-2 align-items-center">
                                 <?php if ($usuario['id'] != session()->get('id')): ?>
+                                    
+                                    <form action="<?= base_url('admin/cambiarRol/' . $usuario['id']) ?>" method="post" class="d-flex gap-1">
+                                        <?= csrf_field() ?>
+                                        <select name="nuevo_rol" class="form-select form-select-sm" required>
+                                            <option value="" disabled selected>Cambiar a...</option>
+                                            <option value="1">Admin</option>
+                                            <option value="2">Entrenador</option>
+                                            <option value="3">Cliente</option>
+                                            <option value="4">Socio Gym</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+                                    </form>
+
                                     <form action="<?= base_url('admin/borrarUsuario/' . $usuario['id']) ?>" method="post">
                                         <?= csrf_field() ?>
-                                        <input type="hidden" name="_method" value="DELETE">
                                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Seguro?');">Borrar</button>
                                     </form>
+                                    
                                 <?php else: ?>
                                     <span class="text-muted fst-italic">(Tú)</span>
                                 <?php endif; ?>

@@ -50,6 +50,51 @@ class Admin extends BaseController
         echo view('plantilla/footer');
     }
 
+    // Función para crear un nuevo usuario desde el panel de Admin
+    public function crearUsuario()
+    {
+        // 1. Verificamos la seguridad: Si no es Admin, lo bloqueamos
+        if (!session()->get('is_logged_in') || session()->get('id_rol') != 1) {
+            return redirect()->to('/')->with('mensaje_error', 'Acceso denegado.');
+        }
+
+        // 2. Comprobamos si el administrador ha enviado el formulario (método POST)
+        if ($this->request->getMethod() == 'POST') {
+            
+            $usuarioModel = new UsuarioModel();
+
+            // 3. Recogemos los datos exactos que escribió el admin en el formulario
+            $nombre    = $this->request->getPost('nombre');
+            $apellidos = $this->request->getPost('apellidos');
+            $email     = $this->request->getPost('email');
+            $password  = $this->request->getPost('password');
+            $id_rol    = $this->request->getPost('id_rol');
+
+            // 4. ¡Súper importante! Encriptamos la contraseña por seguridad antes de guardarla
+            $passwordEncriptada = password_hash($password, PASSWORD_DEFAULT);
+
+            // 5. Preparamos el paquete de datos para enviarlo a la base de datos
+            $datosParaGuardar = [
+                'nombre'         => $nombre,
+                'apellidos'      => $apellidos,
+                'email'          => $email,
+                'password'       => $passwordEncriptada,
+                'fecha_registro' => date('Y-m-d H:i:s'), // Generamos la fecha y hora actual automáticamente
+                'id_rol'         => $id_rol
+            ];
+
+            // 6. Insertamos el nuevo registro y redirigimos con éxito
+            $usuarioModel->insert($datosParaGuardar);
+
+            return redirect()->to('/admin/usuarios')->with('mensaje_exito', 'Usuario creado correctamente.');
+        }
+
+        // 7. Si no se ha enviado el formulario (es decir, el admin acaba de entrar a la página), le mostramos la vista
+        echo view('plantilla/header');
+        echo view('admin/crear_usuario'); 
+        echo view('plantilla/footer');
+    }
+
     /**
      * Elimina un usuario, CON PROTECCIÓN DE SEGURIDAD.
      * URL: tudominio.com/admin/borrarUsuario/5
@@ -59,7 +104,7 @@ class Admin extends BaseController
     // Funcion para Borrar Usuarios
     public function borrarUsuario($idUsuarioParaBorrar = null)
     {
-        // Si no está logueado O no es rol 1, lo echamos fuera.
+        // Si no está logueado O no es rol 1 (Admin), lo echamos fuera.
         if (!session()->get('is_logged_in') || session()->get('id_rol') != 1) {
             return redirect()->to('/')->with('mensaje_error', 'Acceso denegado. No eres administrador.');
         }
@@ -74,13 +119,24 @@ class Admin extends BaseController
         // Instancio el Modelo de Usuarios
         $usuarioModel = new UsuarioModel();
         
-        // Verifico si el usuario existe antes de intentar borrarlo
-        if($usuarioModel->find($idUsuarioParaBorrar)) {
-            // Si existe lo borro
+        // 1. Buscamos y GUARDAMOS todos los datos del usuario que queremos borrar
+        $usuarioABorrar = $usuarioModel->find($idUsuarioParaBorrar);
+
+        // 2. Verificamos si el usuario existe
+        if($usuarioABorrar) {
+            
+            // 3. Comprobamos si el usuario a borrar también es Admin (rol 1)
+            if ($usuarioABorrar['id_rol'] == 1) {
+                // Si es admin, bloqueamos la acción y regresamos con un error
+                return redirect()->back()->with('mensaje_error', 'Por seguridad, no puedes eliminar a otro administrador.');
+            }
+
+            // Si no es admin, procedemos a borrarlo
             $usuarioModel->delete($idUsuarioParaBorrar);
             return redirect()->to('/admin/usuarios')->with('mensaje_exito', 'Usuario eliminado correctamente.');
+            
         } else {
-            // Sino muestra un mensaje
+            // Si no existe, muestra un mensaje
             return redirect()->to('/admin/usuarios')->with('mensaje_error', 'El usuario no existe.');
         }
     }
@@ -90,37 +146,32 @@ class Admin extends BaseController
      * URL: tudominio.com/admin/cambiarRol/5/4
      */
 
-    // Funcion para cambiar el ROL 
-    public function cambiarRol($idUsuario, $nuevoRol)
+    // Ahora solo recibe el ID por la URL
+    public function cambiarRol($idUsuario)
     {
-        // Verifico si esta logeado y si es un admin, sino muestro un mensaje
         if (!session()->get('is_logged_in') || session()->get('id_rol') != 1) {
             return redirect()->to('/')->with('mensaje_error', 'Acceso denegado.');
         }
 
-        // Ahora Validamos
-        // Pasamos un lista de los roles que hay para que nadie pueda ponerse otro rol etc.. (1=Admin, 2=Entrenador, 3=Cliente, 4=Socio)
+        // CAPTURAMOS el nuevo rol que viene del select del formulario
+        $nuevoRol = $this->request->getPost('nuevo_rol'); 
+
         $rolesValidos = [1, 2, 3, 4]; 
-        
         if (!in_array($nuevoRol, $rolesValidos)) {
             return redirect()->back()->with('mensaje_error', 'El rol seleccionado no es válido.');
         }
 
-        // PROCESAMOS EL CAMBIO
         $usuarioModel = new UsuarioModel();
 
-        // Verifico que el usuario exista
         if (!$usuarioModel->find($idUsuario)) {
             return redirect()->back()->with('mensaje_error', 'Usuario no encontrado.');
         }
 
-        // Guardamos el cambio (save detecta el ID y hace un UPDATE), le damos el usuario y cual es su nuevo rol
         $usuarioModel->save([
             'id'     => $idUsuario,
             'id_rol' => $nuevoRol
         ]);
 
-        // Mensaje de EXITO
         return redirect()->back()->with('mensaje_exito', 'Rol actualizado correctamente.');
     }
 

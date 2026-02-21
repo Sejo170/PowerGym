@@ -56,9 +56,14 @@ $routes->group('admin', ['filter' => 'authGuard'], function($routes) {
     // (:num) es un comodín que acepta solo números
     $routes->post('borrarUsuario/(:num)', 'Admin::borrarUsuario/$1');
 
-    // Para cambiar el rol
-    // Aquí esperamos dos números: ID del usuario y ID del nuevo rol
-    $routes->post('cambiarRol/(:num)/(:num)', 'Admin::cambiarRol/$1/$2');
+    // GET para mostrar la vista del formulario
+    $routes->get('crearUsuario', 'Admin::crearUsuario');
+    // POST para procesar los datos cuando el admin le da a guardar
+    $routes->post('crearUsuario', 'Admin::crearUsuario');
+
+    // --- ACTUALIZADO: Para cambiar el rol ---
+    // Ahora solo recibe UN número por la URL (el ID del usuario), porque el nuevo rol viaja por POST
+    $routes->post('cambiarRol/(:num)', 'Admin::cambiarRol/$1');
 
     // API para las gráficas
     $routes->get('datosGrafica', 'Admin::datosGrafica');
