@@ -2,7 +2,6 @@
 
 namespace App\Controllers;
 
-// Importo los modelos
 use App\Controllers\BaseController;
 use App\Models\ProductosModel;
 use App\Models\PedidosModel;
@@ -13,24 +12,16 @@ class Carrito extends BaseController
     // Funcion para mostrar una tabla con lo que hay en el carrito
     public function index()
     {
-        // Creamos la sesion
         $session = session();
         $productosModel = new ProductosModel();
 
-        // 1. Recupera lo que el usuario ha añadido al carrito
         $carrito = $session->get('carrito');
-        
         $datosVista = [];
 
-        // Verifica si hay algo
         if (empty($carrito)) {
-            // Si está vacío, mandamos una lista vacía
             $datosVista['productos'] = []; 
         } else {
-            // 2. Extraemos los IDs de los productos guardados
             $ids = array_keys($carrito);
-
-            // 3. Busco todos esos productos en la BD
             $datosVista['productos'] = $productosModel->find($ids);
         }
 
@@ -39,31 +30,44 @@ class Carrito extends BaseController
         echo view('plantilla/footer');
     }
 
-    // Funcion para confirmar el pedido
+    // Funcion para confirmar el pedido (CON CONTROL DE STOCK)
     public function confirmar()
     {
         $session = session();
         $carrito = $session->get('carrito');
 
-        // Si el carrito está vacío, los redirigimos a otro lado
+        // Si el carrito está vacío, los redirigimos a la tienda
         if (empty($carrito)) {
             return redirect()->to(base_url('tienda'));
         }
 
-        // 1. Calculamos el total
+        // Si no está logueado, a iniciar sesión
+        if (!$session->get('is_logged_in')) {
+            return redirect()->to(base_url('login'))->with('mensaje_error', 'Debes iniciar sesión para finalizar tu compra.');
+        }
+
         $productosModel = new ProductosModel();
         $ids = array_keys($carrito);
         $productos = $productosModel->find($ids);
 
+        // VERIFICACIÓN DE STOCK FINAL
+        foreach ($productos as $producto) {
+            $cantidadPedida = $carrito[$producto['id']];
+            if ($cantidadPedida > $producto['stock']) {
+                // Si alguien se adelantó y no queda stock suficiente, cancelamos la compra y avisamos
+                return redirect()->to(base_url('carrito'))->with('mensaje_error', 'Lo sentimos, solo nos quedan ' . $producto['stock'] . ' unidades de ' . $producto['nombre']);
+            }
+        }
+
+        // CÁLCULO DEL TOTAL
         $total = 0;
         foreach ($productos as $producto) {
             $cantidad = $carrito[$producto['id']];
-            $total += $producto['precio'] * $cantidad;
+            $total += (float)$producto['precio'] * $cantidad;
         }
 
-        // Guardamos el pedido en la bd
+        // GUARDAMOS EL PEDIDO
         $pedidosModel = new PedidosModel();
-        
         $id_usuario = $session->get('id'); 
 
         $datosPedido = [
@@ -71,77 +75,112 @@ class Carrito extends BaseController
             'total'      => $total
         ];
 
-        // insert() guarda el pedido y DEVUELVE el ID nuevo (ej: 54)
+        // insert() guarda el pedido y DEVUELVE el ID nuevo
         $id_pedido = $pedidosModel->insert($datosPedido);
 
         $lineasModel = new LineasPedidosModel();
 
         foreach ($productos as $producto) {
-            // 1. Guardamos la línea del pedido (Como antes)
+            $cantidadPedida = $carrito[$producto['id']];
+            
+            // Guardamos la línea
             $datosLinea = [
                 'id_pedido'   => $id_pedido,
                 'id_producto' => $producto['id'],
                 'precio'      => $producto['precio'],
-                'cantidad'    => $carrito[$producto['id']]
+                'cantidad'    => $cantidadPedida
             ];
             $lineasModel->insert($datosLinea);
 
-            // Actualizamos el Stock
-            // Calculamos lo que queda
-            $nuevoStock = $producto['stock'] - $carrito[$producto['id']];
-
-            // Lo guardamos en la base de datos
+            // Actualizamos el Stock restando lo comprado
+            $nuevoStock = $producto['stock'] - $cantidadPedida;
             $productosModel->update($producto['id'], ['stock' => $nuevoStock]);
         }
 
-        // Vaciamos el carrito y redirigimos
+        // Vaciamos el carrito de la sesión
         $session->remove('carrito');
-        
-        // Redirigimos a la tienda con un mensaje de éxito
-        return redirect()->to(base_url('tienda'))->with('mensaje', '¡Pedido realizado con éxito!');
+
+        // Lo mandamos a una vista de confirmación en lugar de devolverlo a la tienda de golpe
+        return redirect()->to(base_url('carrito/exito/' . $id_pedido));
     }
 
-    // Funcion para eliminar  un producto del carrito
+    // Funcion para eliminar un producto del carrito
     public function eliminar($id = null)
     {
         $session = session();
-        // Recuperamos lo que hay en el carrito si hay algo
         $carrito = $session->get('carrito');
 
-        // Si el producto esta seleccionado en el carrito, lo borramos
         if (isset($carrito[$id])) {
             unset($carrito[$id]);
         }
 
-        // Guardamos y redirigimos
         $session->set('carrito', $carrito);
         return redirect()->to(base_url('carrito'));
     }
 
-    // Funcion para actualizar la cantidad de un producto en el carrito
+    // Funcion para actualizar la cantidad (CON CONTROL DE STOCK)
     public function actualizar()
     {
-        // 1. Recibimos las cantidades del formulario
         $cantidades = $this->request->getPost('cantidad'); 
-        
         $session = session();
-        // Recuperamos lo que hay en el carrito si hay algo
         $carrito = $session->get('carrito');
-        
-        // Obtenemos los IDs actuales para saber qué producto es cual
         $ids = array_keys($carrito);
 
-        // 2. Recorremos la lista paso a paso
+        $productosModel = new ProductosModel();
+
+        // Recorremos los productos que ha modificado el usuario
         for ($i = 0; $i < count($ids); $i++) {
             $id_producto = $ids[$i];
-            $nueva_cantidad = $cantidades[$i];
+            $nueva_cantidad = (int) $cantidades[$i];
 
-            // Actualizamos la cantidad para ese ID específico
+            // Traemos el producto de la BD para saber su stock real
+            $productoBD = $productosModel->find($id_producto);
+
+            // Si la cantidad que pide es mayor que el stock, lo bloqueamos
+            if ($nueva_cantidad > $productoBD['stock']) {
+                // Le dejamos la cantidad al máximo de stock que haya
+                $carrito[$id_producto] = $productoBD['stock'];
+                
+                // Guardamos el carrito y cortamos el proceso lanzando un error
+                $session->set('carrito', $carrito);
+                return redirect()->to(base_url('carrito'))->with('mensaje_error', 'No puedes añadir ' . $nueva_cantidad . ' unidades. Solo nos quedan ' . $productoBD['stock'] . ' de ' . $productoBD['nombre']);
+            }
+
+            // Si es menor a 1, lo mínimo es 1 (para borrar, que use el botón eliminar)
+            if ($nueva_cantidad < 1) {
+                $nueva_cantidad = 1;
+            }
+
+            // Si todo está bien, actualizamos la cantidad normal
             $carrito[$id_producto] = $nueva_cantidad;
         }
 
-        // 3. Guardamos y nos saca a otra pagina
         $session->set('carrito', $carrito);
-        return redirect()->to(base_url('carrito'));
+        return redirect()->to(base_url('carrito'))->with('mensaje_exito', 'Carrito actualizado.');
+    }
+
+    // Pantalla de confirmación de pedido
+    public function exito($id_pedido)
+    {
+        // Solo dejamos entrar si el usuario está logueado
+        if (!session()->get('is_logged_in')) {
+            return redirect()->to(base_url('/'));
+        }
+
+        $pedidosModel = new PedidosModel();
+        
+        // Buscamos el pedido para enseñarle el resumen
+        $pedido = $pedidosModel->find($id_pedido);
+
+        // Seguridad: Si el pedido no existe o no es de este usuario, lo sacamos
+        if (!$pedido || $pedido['id_usuario'] != session()->get('id')) {
+            return redirect()->to(base_url('tienda'));
+        }
+
+        $data['pedido'] = $pedido;
+
+        echo view('plantilla/header');
+        echo view('carrito/exito', $data);
+        echo view('plantilla/footer');
     }
 }

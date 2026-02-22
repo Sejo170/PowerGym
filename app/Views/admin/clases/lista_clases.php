@@ -12,44 +12,6 @@
         </div>
     <?php endif; ?>
 
-    <div class="card mb-4">
-        <div class="card-body">
-            <form action="<?= base_url('admin/clases') ?>" method="get">
-                <div class="row align-items-end">
-                    
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Filtrar por Entrenador:</label>
-                        <select name="entrenador_id" class="form-select">
-                            <option value="">Todos los entrenadores</option>
-                            <?php if (!empty($entrenadores)): ?>
-                                <?php foreach ($entrenadores as $entrenador): ?>
-                                    <option value="<?= $entrenador['id'] ?>" <?= (isset($_GET['entrenador_id']) && $_GET['entrenador_id'] == $entrenador['id']) ? 'selected' : '' ?>>
-                                        <?= esc($entrenador['nombre']) . ' ' . esc($entrenador['apellidos']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                            </select>
-                    </div>
-
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-dark w-100">
-                            <i class="fas fa-search"></i> Filtrar
-                        </button>
-                    </div>
-
-                    <?php if(isset($_GET['entrenador_id'])): ?>
-                        <div class="col-md-2">
-                            <a href="<?= base_url('admin/clases') ?>" class="btn btn-outline-secondary w-100">
-                                Limpiar
-                            </a>
-                        </div>
-                    <?php endif; ?>
-
-                </div>
-            </form>
-        </div>
-    </div>
-
     <div class="card shadow-sm">
         <?php if (session()->getFlashdata('mensaje_exito')): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -74,9 +36,7 @@
                     <tbody>
                         <?php if (empty($clases)): ?>
                             <tr>
-                                <td colspan="7" class="text-center py-4">
-                                    No hay clases creadas todavía.
-                                </td>
+                                <td colspan="7" class="text-center py-4">No hay clases creadas todavía.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($clases as $clase): ?>
@@ -94,15 +54,21 @@
                                     </td>
 
                                     <td class="text-end">
-                                        <a href="<?= base_url('admin/clases/editar/' . $clase['id']) ?>" class="btn btn-sm btn-outline-primary me-1">
-                                            Editar
-                                        </a>
+                                        <?php 
+                                        if (session()->get('id_rol') == 1 || session()->get('id') == $clase['id_entrenador']): 
+                                        ?>
+                                            <a href="<?= base_url('admin/clases/editar/' . $clase['id']) ?>" class="btn btn-sm btn-outline-primary me-1">
+                                                Editar
+                                            </a>
 
-                                        <a href="<?= base_url('admin/clases/borrar/' . $clase['id']) ?>" 
-                                            class="btn btn-danger btn-sm" 
-                                            onclick="return confirm('¿Estás seguro de que deseas eliminar esta clase? Esta acción no se puede deshacer.');">
-                                            Borrar
-                                        </a>
+                                            <a href="<?= base_url('admin/clases/borrar/' . $clase['id']) ?>" 
+                                                class="btn btn-danger btn-sm" 
+                                                onclick="return confirm('¿Estás seguro de que deseas eliminar esta clase?');">
+                                                Borrar
+                                            </a>
+                                        <?php else: ?>
+                                            <small class="text-muted"><i class="fas fa-lock"></i> No editable</small>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

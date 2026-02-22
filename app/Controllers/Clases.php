@@ -11,30 +11,29 @@ class Clases extends BaseController
     // Funcion para mostrar una tabla con las clases
     public function index()
     {
-        // Instanciamos el modelo
+        // 1. Instanciamos los modelos necesarios
         $clasesModel = new ClasesModel();
-        
-        // 1. Cargamos el modelo de Usuarios para llenar el desplegable
         $usuarioModel = new \App\Models\UsuarioModel();
+
+        // 2. Cargamos la lista de entrenadores para el desplegable del filtro
         $data['entrenadores'] = $usuarioModel->where('id_rol', 2)->findAll();
 
-        // 2. Capturamos el filtro de la URL usando el GET
+        // 3. Capturamos el ID del entrenador desde la URL
         $filtroEntrenador = $this->request->getGet('entrenador_id');
 
-        // 3. Construimos la consulta para poder filtrar
-        // Seleccionamos los datos de la clase y los nombres del entrenador
+        // 4. Preparamos la consulta con JOIN para traer los nombres de los entrenadores
         $clasesModel->select('clases.*, usuarios.nombre as nombre_entrenador, usuarios.apellidos as apellidos_entrenador')
                     ->join('usuarios', 'usuarios.id = clases.id_entrenador');
 
-        // 4. Si hay filtro seleccionado, lo aplicamos
+        // 5. APLICAMOS EL FILTRO
         if ($filtroEntrenador) {
             $clasesModel->where('clases.id_entrenador', $filtroEntrenador);
         }
 
-        // 5. Ejecutar la consulta
-        $data['clases'] = $clasesModel->findAll();
+        // 6. Ejecutamos la consulta y guardamos los resultados
+        $data['clases'] = $clasesModel->orderBy('clases.fecha_hora', 'ASC')->findAll();
 
-        // 6. Cargar vistas
+        // 7. Cargamos las vistas
         echo view('plantilla/header');
         echo view('admin/clases/lista_clases', $data);
         echo view('plantilla/footer');
@@ -61,11 +60,24 @@ class Clases extends BaseController
         // Instanciamos el modelo
         $clasesModel = new ClasesModel();
 
-        // Creamos el paquete de datos (Array)
+        $fechaPost = $this->request->getPost('fecha_hora');
+
+        $fechaLimpia = date('Y-m-d H:i:s', strtotime($fechaPost));
+
+        $tiempoInicio = date('Y-m-d H:i:s', strtotime($fechaLimpia . ' -30 minutes'));
+        $tiempoFin    = date('Y-m-d H:i:s', strtotime($fechaLimpia . ' +30 minutes'));
+
+        $clasesConflicto = $clasesModel->where("fecha_hora BETWEEN '$tiempoInicio' AND '$tiempoFin'")
+            ->countAllResults();
+
+        if ($clasesConflicto > 0) {
+            return redirect()->back()->withInput()->with('mensaje_error', 'Ya existe una clase programada en ese horario. Deja al menos 30 minutos de margen entre clases.');
+        }
+
         $datos = [
             'nombre'         => $this->request->getPost('nombre'),
             'descripcion'    => $this->request->getPost('descripcion'),
-            'fecha_hora'     => $this->request->getPost('fecha_hora'),
+            'fecha_hora'     => $fechaLimpia,
             'plazas_totales' => $this->request->getPost('plazas_totales'),
             'id_entrenador'  => $this->request->getPost('id_entrenador'),
         ];
@@ -74,62 +86,59 @@ class Clases extends BaseController
         $clasesModel->save($datos);
 
         // Volvemos a la tabla y mostramos mensaje de éxito
-        return redirect()->to('admin/clases')->with('mensaje_exito', '¡Clase creada correctamente!');
+        return redirect()->to('admin/clases')->with('mensaje_exito', '¡Clase creada correctamente sin solapamientos!');
     }
 
-    // Funcion para borrar los datos CON SEGURIDAD
+    // Funcion para borrar los datos CON SEGURIDAD Y LIMPIEZA DE DEPENDENCIAS
     public function borrar($id)
     {
-        // Verificamos si hay alguien logueado por seguridad básica
         if (!session()->get('is_logged_in')) {
             return redirect()->to('/')->with('mensaje_error', 'Acceso denegado.');
         }
 
         $clasesModel = new ClasesModel();
+        $reservasModel = new \App\Models\ReservasModel(); 
         
-        // 1. Buscamos la clase en la base de datos ANTES de intentar borrarla
         $claseABorrar = $clasesModel->find($id);
 
-        // 2. Comprobamos si la clase realmente existe
         if ($claseABorrar) {
-            
-            // Guardamos los datos del usuario actual en variables para que sea más fácil de leer
-            $rolUsuario = session()->get('id_rol');
-            $idUsuario = session()->get('id');
-
-            // 3. LA REGLA DE SEGURIDAD CLAVE:
-            // Si el usuario es un Entrenador (rol 2) Y (&&) el ID del entrenador de la clase NO coincide con el suyo (!=)
-            if ($rolUsuario == 2 && $claseABorrar['id_entrenador'] != $idUsuario) {
-                // Lo bloqueamos y le enviamos un mensaje de error
-                return redirect()->back()->with('mensaje_error', 'No tienes permiso para borrar la clase de otro entrenador.');
+            // SEGURIDAD: Solo Admin o el dueño borran
+            if (session()->get('id_rol') == 2 && $claseABorrar['id_entrenador'] != session()->get('id')) {
+                return redirect()->to('admin/clases')->with('mensaje_error', 'No tienes permiso para borrar esta clase.');
             }
 
-            // Si es un Admin (rol 1) pasará de largo el 'if' anterior sin problemas.
-            // Si es el entrenador dueño de la clase, también pasará de largo.
+            // Primero eliminamos dependencias (reservas)
+            $reservasModel->where('id_clase', $id)->delete();
             
-            // 4. Borramos la clase
             $clasesModel->delete($id);
-            return redirect()->to('admin/clases')->with('mensaje_exito', 'Clase eliminada correctamente.');
-            
-        } else {
-            return redirect()->to('admin/clases')->with('mensaje_error', 'La clase no existe.');
-        }
+            return redirect()->to('admin/clases')->with('mensaje_exito', 'Clase y sus reservas eliminadas correctamente.');
+        } 
+        
+        return redirect()->to('admin/clases')->with('mensaje_error', 'La clase no existe.');
     }
 
     // Funcion para Editar una clase
     public function editar($id)
     {
-        // Instanciamos los modelos
         $clasesModel = new ClasesModel();
         $usuariosModel = new \App\Models\UsuarioModel();
 
-        // Recuperamos la clase existente usando su ID
-        $data['clase'] = $clasesModel->find($id);
+        // Recuperamos la clase
+        $clase = $clasesModel->find($id);
         
-        // Recuperamos los entrenadores para llenar el select
+        // 1. Verificación de existencia
+        if (!$clase) {
+            return redirect()->to('admin/clases')->with('mensaje_error', 'La clase no existe.');
+        }
+
+        // 2. Si es Entrenador (rol 2) y la clase no le pertenece, denegar acceso
+        if (session()->get('id_rol') == 2 && $clase['id_entrenador'] != session()->get('id')) {
+            return redirect()->to('admin/clases')->with('mensaje_error', 'No tienes permiso para editar clases de otros entrenadores.');
+        }
+
+        $data['clase'] = $clase;
         $data['entrenadores'] = $usuariosModel->where('id_rol', 2)->findAll();
 
-        // Cargamos la vista específica de edición
         echo view('plantilla/header');
         echo view('admin/clases/editar_clase', $data);
         echo view('plantilla/footer');
@@ -138,35 +147,45 @@ class Clases extends BaseController
     // Funcion para actualizar el producto
     public function actualizar()
     {
+        $clasesModel = new ClasesModel();
+        $id = $this->request->getPost('id');
+        $claseOriginal = $clasesModel->find($id);
+
+        if (session()->get('id_rol') == 2 && $claseOriginal['id_entrenador'] != session()->get('id')) {
+            return redirect()->to('admin/clases')->with('mensaje_error', 'Acción denegada: No puedes modificar esta clase.');
+        }
+
         // Si los datos no cumplen las reglas, no les dejamos pasar
         if (! $this->validate([
             'nombre'          => 'required|min_length[3]',
             'plazas_totales'  => 'required|integer|greater_than[0]',
             'id_entrenador'   => 'required'
         ])) {
-            // Si falla, los mandamos de vuelta al formulario con los errores
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        // Instanciamos el modelo
-        $clasesModel = new ClasesModel();
+        $fechaPost = $this->request->getPost('fecha_hora');
+        $fechaLimpia = date('Y-m-d H:i:s', strtotime($fechaPost));
+        $tiempoInicio = date('Y-m-d H:i:s', strtotime($fechaLimpia . ' -30 minutes'));
+        $tiempoFin    = date('Y-m-d H:i:s', strtotime($fechaLimpia . ' +30 minutes'));
 
-        // Recogemos el ID
-        $id = $this->request->getPost('id');
+        $clasesConflicto = $clasesModel->where("fecha_hora BETWEEN '$tiempoInicio' AND '$tiempoFin'")
+            ->where('id !=', $id) 
+            ->countAllResults();
 
-        // Recogemos los datos
+        if ($clasesConflicto > 0) {
+            return redirect()->back()->withInput()->with('mensaje_error', 'Conflicto de horario: Ya existe otra clase programada.');
+        }
+
         $datos = [
             'nombre'         => $this->request->getPost('nombre'),
             'descripcion'    => $this->request->getPost('descripcion'),
-            'fecha_hora'     => $this->request->getPost('fecha_hora'),
+            'fecha_hora'     => $fechaLimpia,
             'plazas_totales' => $this->request->getPost('plazas_totales'),
             'id_entrenador'  => $this->request->getPost('id_entrenador'),
         ];
 
-        // Actualizamos en la bd
         $clasesModel->update($id, $datos);
-
-        // Redirigimos y mostramos un mensaje
         return redirect()->to('admin/clases')->with('mensaje_exito', '¡Clase actualizada correctamente!');
     }
 }

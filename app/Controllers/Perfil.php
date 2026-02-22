@@ -11,14 +11,44 @@ class Perfil extends BaseController
     // Funcion para mostrar el formulario con tus datos actuales
     public function index()
     {
-        // Instanciamos el modelo
-        $usuarioModel = new UsuarioModel();
-        
-        // Obtenemos el ID de la sesión
         $idUsuario = session()->get('id');
         
-        // Buscamos los datos en la BD
+        // Cargamos modelos con la ruta completa para evitar fallos de "use"
+        $usuarioModel  = new \App\Models\UsuarioModel();
+        $reservasModel = new \App\Models\ReservasModel();
+        $pedidosModel  = new \App\Models\PedidosModel(); 
+        
         $data['usuario'] = $usuarioModel->find($idUsuario);
+
+        // Reservas Pendientes
+        $data['reservas_pendientes'] = $reservasModel->select('clases.*, usuarios.nombre as nombre_entrenador')
+            ->join('clases', 'clases.id = reservas.id_clase')
+            ->join('usuarios', 'usuarios.id = clases.id_entrenador')
+            ->where('reservas.id_usuario', $idUsuario)
+            ->where('clases.fecha_hora >=', date('Y-m-d H:i:s'))
+            ->orderBy('clases.fecha_hora', 'ASC')
+            ->findAll();
+
+        // Historial Clases
+        $data['historial_clases'] = $reservasModel->select('clases.*, usuarios.nombre as nombre_entrenador')
+            ->join('clases', 'clases.id = reservas.id_clase')
+            ->join('usuarios', 'usuarios.id = clases.id_entrenador')
+            ->where('reservas.id_usuario', $idUsuario)
+            ->where('clases.fecha_hora <', date('Y-m-d H:i:s'))
+            ->orderBy('clases.fecha_hora', 'DESC')
+            ->findAll();
+
+        // Pedidos
+        $data['mis_pedidos'] = $pedidosModel->select('pedidos.*, GROUP_CONCAT(productos.nombre SEPARATOR ", ") as nombres_productos')
+            ->join('lineas_pedidos', 'lineas_pedidos.id_pedido = pedidos.id')
+            ->join('productos', 'productos.id = lineas_pedidos.id_producto')
+            ->where('pedidos.id_usuario', $idUsuario)
+            ->groupBy('pedidos.id')
+            ->orderBy('pedidos.fecha', 'DESC')
+            ->paginate(5, 'pedidos');
+
+        // Pasamos el paginador a la vista
+        $data['pager'] = $pedidosModel->pager;
 
         echo view('plantilla/header');
         echo view('perfil/editar', $data);

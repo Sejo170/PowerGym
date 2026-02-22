@@ -10,43 +10,61 @@ class Horarios extends BaseController
     // Funcion mostrar las clases en "Frontend"
     public function index()
     {
-        // Iniciamos la sesion
         $session = session();
 
-        // Seguridad
-        // Si no estamos logeado nos manda al login
         if (!$session->get('is_logged_in')) {
             return redirect()->to('/login');
         }
 
-        // Si intenta apuntarse una persona que no es socio muestra un mensaje de error
         if ($session->get('id_rol') == 3) {
             return redirect()->to('/')->with('mensaje_error', 'Debes ser Socio para reservar clases.');
         }
 
-        // Cargar modelos
         $clasesModel = new \App\Models\ClasesModel();
         $reservasModel = new \App\Models\ReservasModel();
+        
+        // Cargamos el modelo de usuarios para traer a los entrenadores al filtro
+        $usuarioModel = new \App\Models\UsuarioModel();
+        $data['entrenadores'] = $usuarioModel->where('id_rol', 2)->findAll();
 
-        // Obtenemos las clases
-        // Obtenemos las clases filtrando las que ya han pasado
-        $clases = $clasesModel->select('clases.*, usuarios.nombre as nombre_entrenador')
+        // Capturamos los 3 posibles filtros de la URL
+        $busqueda = $this->request->getGet('buscar');
+        $filtroEntrenador = $this->request->getGet('entrenador');
+        $filtroPlazas = $this->request->getGet('plazas');
+
+        // Preparamos la consulta base
+        $clasesModel->select('clases.*, usuarios.nombre as nombre_entrenador, usuarios.apellidos as apellidos_entrenador')
             ->join('usuarios', 'usuarios.id = clases.id_entrenador')
             ->where('fecha_hora >=', date('Y-m-d H:i:s'))
-            ->orderBy('fecha_hora', 'ASC')
-            ->findAll();
+            ->orderBy('fecha_hora', 'ASC');
 
-        // Calculamos las plaza libres
-        // Recorremos cada clase para calcular cuántas plazas quedan
+        // Filtro 1: Texto
+        if (!empty($busqueda)) {
+            $clasesModel->like('clases.nombre', $busqueda);
+        }
+
+        // Filtro 2: Entrenador
+        if (!empty($filtroEntrenador)) {
+            $clasesModel->where('clases.id_entrenador', $filtroEntrenador);
+        }
+
+        // Filtro 3: Plazas Libres
+        if ($filtroPlazas == 'libres') {
+            // Usamos una subconsulta SQL nativa para restar el total - las reservas
+            $clasesModel->where('(plazas_totales - (SELECT COUNT(id) FROM reservas WHERE reservas.id_clase = clases.id)) >', 0);
+        }
+
+        // Paginamos de 6 en 6
+        $clases = $clasesModel->paginate(6);
+
+        // Calculamos las plazas libres (para mostrarlas en la tarjeta)
         foreach ($clases as &$clase) {
-            // Contamos cuántas reservas tiene esta clase específica
             $numReservas = $reservasModel->where('id_clase', $clase['id'])->countAllResults();
-            
-            // Calculamos: Totales - Ocupadas = Libres
             $clase['plazas_libres'] = $clase['plazas_totales'] - $numReservas;
         }
 
         $data['clases'] = $clases;
+        $data['pager'] = $clasesModel->pager;
 
         // Obtener reservas del usuario actual
         $idUsuario = $session->get('id');

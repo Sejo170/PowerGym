@@ -3,6 +3,17 @@
         <div class="card-header bg-dark text-white">
             <h3 class="mb-0">Nueva Clase</h3>
         </div>
+        <?php if (session()->getFlashdata('mensaje_error')): ?>
+            <div class="alert alert-danger fw-bold" role="alert">
+                <?= session()->getFlashdata('mensaje_error') ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (session()->getFlashdata('mensaje_exito')): ?>
+            <div class="alert alert-success fw-bold" role="alert">
+                <?= session()->getFlashdata('mensaje_exito') ?>
+            </div>
+        <?php endif; ?>
         <div class="card-body">
             
             <form action="<?= base_url('admin/clases/guardar') ?>" method="post">
