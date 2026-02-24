@@ -58,7 +58,7 @@ class Admin extends BaseController
             return redirect()->to('/')->with('mensaje_error', 'Acceso denegado.');
         }
 
-        // 2. Comprobamos si el administrador ha enviado el formulario (método POST)
+        // 2. Comprobamos si el administrador ha enviado el formulario
         if ($this->request->getMethod() == 'POST') {
             
             $usuarioModel = new UsuarioModel();
@@ -70,7 +70,7 @@ class Admin extends BaseController
             $password  = $this->request->getPost('password');
             $id_rol    = $this->request->getPost('id_rol');
 
-            // 4. ¡Súper importante! Encriptamos la contraseña por seguridad antes de guardarla
+            // 4. Encriptamos la contraseña por seguridad antes de guardarla
             $passwordEncriptada = password_hash($password, PASSWORD_DEFAULT);
 
             // 5. Preparamos el paquete de datos para enviarlo a la base de datos
@@ -79,7 +79,7 @@ class Admin extends BaseController
                 'apellidos'      => $apellidos,
                 'email'          => $email,
                 'password'       => $passwordEncriptada,
-                'fecha_registro' => date('Y-m-d H:i:s'), // Generamos la fecha y hora actual automáticamente
+                'fecha_registro' => date('Y-m-d H:i:s'),
                 'id_rol'         => $id_rol
             ];
 
@@ -89,17 +89,10 @@ class Admin extends BaseController
             return redirect()->to('/admin/usuarios')->with('mensaje_exito', 'Usuario creado correctamente.');
         }
 
-        // 7. Si no se ha enviado el formulario (es decir, el admin acaba de entrar a la página), le mostramos la vista
         echo view('plantilla/header');
         echo view('admin/crear_usuario'); 
         echo view('plantilla/footer');
     }
-
-    /**
-     * Elimina un usuario, CON PROTECCIÓN DE SEGURIDAD.
-     * URL: tudominio.com/admin/borrarUsuario/5
-     * * @param int $idUsuarioParaBorrar El ID que viene en la URL
-     */
 
     // Funcion para Borrar Usuarios
     public function borrarUsuario($idUsuarioParaBorrar = null)
@@ -140,11 +133,6 @@ class Admin extends BaseController
             return redirect()->to('/admin/usuarios')->with('mensaje_error', 'El usuario no existe.');
         }
     }
-
-    /**
-     * Cambia el rol de un usuario (Hacer Socio / Quitar Socio).
-     * URL: tudominio.com/admin/cambiarRol/5/4
-     */
 
     // Ahora solo recibe el ID por la URL
     public function cambiarRol($idUsuario)

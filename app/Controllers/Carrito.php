@@ -30,7 +30,7 @@ class Carrito extends BaseController
         echo view('plantilla/footer');
     }
 
-    // Funcion para confirmar el pedido (CON CONTROL DE STOCK)
+    // Funcion para confirmar el pedido
     public function confirmar()
     {
         $session = session();
@@ -75,7 +75,6 @@ class Carrito extends BaseController
             'total'      => $total
         ];
 
-        // insert() guarda el pedido y DEVUELVE el ID nuevo
         $id_pedido = $pedidosModel->insert($datosPedido);
 
         $lineasModel = new LineasPedidosModel();
