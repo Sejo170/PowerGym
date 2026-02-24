@@ -44,7 +44,7 @@
                             </td>
                             <td><?= number_format($precio, 2, ',', '.') ?> €</td>
                             <td>
-                                <input type="number" name="cantidad[]" value="<?= $cantidad ?>" min="1" class="form-control" style="width: 80px;">
+                                <input type="number" name="cantidad[<?= $producto['id'] ?>]" value="<?= $cantidad ?>" min="1" class="form-control" style="width: 80px;">
                             </td>
                             <td>
                                 <strong><?= number_format($subtotal, 2, ',', '.') ?> €</strong>

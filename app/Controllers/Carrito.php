@@ -121,42 +121,42 @@ class Carrito extends BaseController
     // Funcion para actualizar la cantidad (CON CONTROL DE STOCK)
     public function actualizar()
     {
+        // Ahora recibimos un array asociativo: [ id_producto => nueva_cantidad ]
         $cantidades = $this->request->getPost('cantidad'); 
         $session = session();
         $carrito = $session->get('carrito');
-        $ids = array_keys($carrito);
+        $productosModel = new \App\Models\ProductosModel();
 
-        $productosModel = new ProductosModel();
-
-        // Recorremos los productos que ha modificado el usuario
-        for ($i = 0; $i < count($ids); $i++) {
-            $id_producto = $ids[$i];
-            $nueva_cantidad = (int) $cantidades[$i];
-
-            // Traemos el producto de la BD para saber su stock real
-            $productoBD = $productosModel->find($id_producto);
-
-            // Si la cantidad que pide es mayor que el stock, lo bloqueamos
-            if ($nueva_cantidad > $productoBD['stock']) {
-                // Le dejamos la cantidad al máximo de stock que haya
-                $carrito[$id_producto] = $productoBD['stock'];
+        if ($cantidades) {
+            // Recorremos exactamente lo que nos manda el formulario
+            foreach ($cantidades as $id_producto => $nueva_cantidad) {
                 
-                // Guardamos el carrito y cortamos el proceso lanzando un error
-                $session->set('carrito', $carrito);
-                return redirect()->to(base_url('carrito'))->with('mensaje_error', 'No puedes añadir ' . $nueva_cantidad . ' unidades. Solo nos quedan ' . $productoBD['stock'] . ' de ' . $productoBD['nombre']);
-            }
+                // Solo actualizamos si el producto realmente está en el carrito
+                if (isset($carrito[$id_producto])) {
+                    $nueva_cantidad = (int) $nueva_cantidad;
+                    $productoBD = $productosModel->find($id_producto);
 
-            // Si es menor a 1, lo mínimo es 1 (para borrar, que use el botón eliminar)
-            if ($nueva_cantidad < 1) {
-                $nueva_cantidad = 1;
-            }
+                    // Validación: Stock máximo
+                    if ($nueva_cantidad > $productoBD['stock']) {
+                        $carrito[$id_producto] = $productoBD['stock'];
+                        $session->set('carrito', $carrito);
+                        return redirect()->to(base_url('carrito'))->with('mensaje_error', 'No puedes añadir ' . $nueva_cantidad . ' unidades. Solo nos quedan ' . $productoBD['stock'] . ' de ' . $productoBD['nombre']);
+                    }
 
-            // Si todo está bien, actualizamos la cantidad normal
-            $carrito[$id_producto] = $nueva_cantidad;
+                    // Validación: Mínimo 1 unidad
+                    if ($nueva_cantidad < 1) {
+                        $nueva_cantidad = 1;
+                    }
+
+                    // Actualizamos la cantidad para ese ID exacto
+                    $carrito[$id_producto] = $nueva_cantidad;
+                }
+            }
         }
 
+        // Guardamos y volvemos
         $session->set('carrito', $carrito);
-        return redirect()->to(base_url('carrito'))->with('mensaje_exito', 'Carrito actualizado.');
+        return redirect()->to(base_url('carrito'))->with('mensaje_exito', 'Carrito actualizado correctamente.');
     }
 
     // Pantalla de confirmación de pedido
