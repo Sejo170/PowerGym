@@ -100,7 +100,6 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
                                 <li><a class="dropdown-item" href="<?= base_url('perfil') ?>">Mi Perfil</a></li>
-                                <li><a class="dropdown-item" href="<?= base_url('mis-reservas') ?>">Mis Reservas</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="<?= base_url('logout') ?>">Cerrar Sesión</a></li>
                             </ul>

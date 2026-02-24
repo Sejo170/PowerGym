@@ -23,20 +23,20 @@ class Horarios extends BaseController
         $clasesModel = new \App\Models\ClasesModel();
         $reservasModel = new \App\Models\ReservasModel();
         
-        // Cargamos el modelo de usuarios para traer a los entrenadores al filtro
         $usuarioModel = new \App\Models\UsuarioModel();
         $data['entrenadores'] = $usuarioModel->where('id_rol', 2)->findAll();
 
-        // Capturamos los 3 posibles filtros de la URL
         $busqueda = $this->request->getGet('buscar');
         $filtroEntrenador = $this->request->getGet('entrenador');
         $filtroPlazas = $this->request->getGet('plazas');
 
-        // Preparamos la consulta base
+        // Capturamos la hora exacta
+        $fechaHoraActual = date('Y-m-d H:i:s');
+
+        // Preparamos la consulta base con JOIN y el filtro de FECHA OBLIGATORIO
         $clasesModel->select('clases.*, usuarios.nombre as nombre_entrenador, usuarios.apellidos as apellidos_entrenador')
             ->join('usuarios', 'usuarios.id = clases.id_entrenador')
-            ->where('fecha_hora >=', date('Y-m-d H:i:s'))
-            ->orderBy('fecha_hora', 'ASC');
+            ->where('clases.fecha_hora >', $fechaHoraActual);
 
         // Filtro 1: Texto
         if (!empty($busqueda)) {
@@ -50,11 +50,11 @@ class Horarios extends BaseController
 
         // Filtro 3: Plazas Libres
         if ($filtroPlazas == 'libres') {
-            // Usamos una subconsulta SQL nativa para restar el total - las reservas
             $clasesModel->where('(plazas_totales - (SELECT COUNT(id) FROM reservas WHERE reservas.id_clase = clases.id)) >', 0);
         }
 
-        // Paginamos de 6 en 6
+        // Ordenamos y Paginamos de 6 en 6
+        $clasesModel->orderBy('clases.fecha_hora', 'ASC');
         $clases = $clasesModel->paginate(6);
 
         // Calculamos las plazas libres (para mostrarlas en la tarjeta)
@@ -71,7 +71,6 @@ class Horarios extends BaseController
         $misReservas = $reservasModel->where('id_usuario', $idUsuario)->findColumn('id_clase');
         $data['mis_reservas'] = $misReservas ?? [];
 
-        // Cargamos las vistas
         echo view('plantilla/header');
         echo view('horarios', $data);
         echo view('plantilla/footer');
@@ -80,40 +79,47 @@ class Horarios extends BaseController
     // Funcion para poder apuntarse a una clase
     public function reservar()
     {
-        // Recogemos los datos (Clase y usuario)
         $idClase = $this->request->getPost('id_clase');
         $idUsuario = session()->get('id');
 
-        // Si no ha iniciado sesion que nos saque fuera
         if (!$idUsuario) {
             return redirect()->to('/login')->with('mensaje_error', 'Debes iniciar sesión para reservar.');
         }
 
-        // Cargamos modelos
         $clasesModel = new \App\Models\ClasesModel();
         $reservasModel = new \App\Models\ReservasModel();
 
-        // Datos de la clase y contar cuantos van
+        // 🌟 TRAMPA EVITADA: Comprobamos si la clase ya ha pasado
         $clase = $clasesModel->find($idClase);
+        
+        if (!$clase) {
+            return redirect()->to('/horarios')->with('mensaje_error', 'La clase no existe.');
+        }
+
+        if (strtotime($clase['fecha_hora']) <= strtotime(date('Y-m-d H:i:s'))) {
+            return redirect()->to('/horarios')->with('mensaje_error', 'Esta clase ya ha comenzado, no puedes apuntarte.');
+        }
+
+        // Comprobamos si el usuario ya está apuntado (Para evitar doble click)
+        $reservaExistente = $reservasModel->where('id_clase', $idClase)->where('id_usuario', $idUsuario)->first();
+        if ($reservaExistente) {
+            return redirect()->to('/horarios')->with('mensaje_error', 'Ya estás apuntado a esta clase.');
+        }
+
+        // Contamos cuantos van
         $numReservas = $reservasModel->where('id_clase', $idClase)->countAllResults();
 
         // Comprobamos si hay plazas
         if ($numReservas < $clase['plazas_totales']) {
-            // Si hay hueco lo apuntamos
             $datosReserva = [
                 'id_usuario' => $idUsuario,
                 'id_clase'   => $idClase
             ];
 
-            // Lo apuntamos
             $reservasModel->insert($datosReserva);
-
-            // Redirigimos con mensaje de exito
             return redirect()->to('/horarios')->with('mensaje', '¡Reserva confirmada con éxito!');
-
         } else {
-            // Si no hay sitio mostramos un mensahe de error
-            return redirect()->back()->with('mensaje_error', '¡Lo sentimos! La clase está llena.');
+            return redirect()->back()->with('mensaje_error', '¡Lo sentimos! La clase se acaba de llenar.');
         }
     }
 
