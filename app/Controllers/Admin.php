@@ -97,62 +97,78 @@ class Admin extends BaseController
     // Funcion para Borrar Usuarios
     public function borrarUsuario($idUsuarioParaBorrar = null)
     {
-        // Si no está logueado O no es rol 1 (Admin), lo echamos fuera.
         if (!session()->get('is_logged_in') || session()->get('id_rol') != 1) {
             return redirect()->to('/')->with('mensaje_error', 'Acceso denegado. No eres administrador.');
         }
 
-        // Para evitar que el Admin se borre a si mismo
         $idAdminLogueado = session()->get('id'); 
-
         if ($idUsuarioParaBorrar == $idAdminLogueado) {
             return redirect()->back()->with('mensaje_error', '¡No puedes borrar tu propia cuenta!');
         }
 
-        // Instancio el Modelo de Usuarios
         $usuarioModel = new UsuarioModel();
-        
-        // Buscamos y GUARDAMOS todos los datos del usuario que queremos borrar
         $usuarioABorrar = $usuarioModel->find($idUsuarioParaBorrar);
 
-        // Verificamos si el usuario existe
         if($usuarioABorrar) {
             
-            // Comprobamos si el usuario a borrar también es Admin (rol 1)
+            // No se puede borrar a otro admin
             if ($usuarioABorrar['id_rol'] == 1) {
-                // Si es admin, bloqueamos la acción y regresamos con un error
                 return redirect()->back()->with('mensaje_error', 'Por seguridad, no puedes eliminar a otro administrador.');
             }
 
-            // Si no es admin, procedemos a borrarlo
-            $usuarioModel->delete($idUsuarioParaBorrar);
-            return redirect()->to('/admin/usuarios')->with('mensaje_exito', 'Usuario eliminado correctamente.');
+            try {
+                // Borramos sus reservas (si es cliente/socio) para evitar el error de clave foránea
+                $reservasModel = new \App\Models\ReservasModel();
+                $reservasModel->where('id_usuario', $idUsuarioParaBorrar)->delete();
+
+                // Si es Entrenador, comprobamos si tiene clases asignadas
+                if ($usuarioABorrar['id_rol'] == 2) {
+                    $clasesModel = new \App\Models\ClasesModel();
+                    $tieneClases = $clasesModel->where('id_entrenador', $idUsuarioParaBorrar)->countAllResults();
+                    
+                    if ($tieneClases > 0) {
+                        return redirect()->back()->with('mensaje_error', 'No se puede borrar este entrenador porque tiene clases asignadas. Reasigna o borra sus clases primero.');
+                    }
+                }
+
+                // Si todo está limpio, borramos al usuario
+                $usuarioModel->delete($idUsuarioParaBorrar);
+                return redirect()->to('/admin/usuarios')->with('mensaje_exito', 'Usuario y sus reservas eliminados correctamente.');
+
+            } catch (\Exception $e) {
+                // Si la base de datos se queja (por ejemplo, porque tiene Pedidos en la tienda)
+                return redirect()->back()->with('mensaje_error', 'No se puede borrar este usuario porque tiene compras o historial en la tienda asociado a su cuenta.');
+            }
             
         } else {
-            // Si no existe, muestra un mensaje
             return redirect()->to('/admin/usuarios')->with('mensaje_error', 'El usuario no existe.');
         }
     }
 
-    // Ahora solo recibe el ID por la URL
+    // Funcion para Cambiar Rol
     public function cambiarRol($idUsuario)
     {
         if (!session()->get('is_logged_in') || session()->get('id_rol') != 1) {
             return redirect()->to('/')->with('mensaje_error', 'Acceso denegado.');
         }
 
-        // CAPTURAMOS el nuevo rol que viene del select del formulario
-        $nuevoRol = $this->request->getPost('nuevo_rol'); 
+        $usuarioModel = new UsuarioModel();
+        $usuarioAEditar = $usuarioModel->find($idUsuario);
 
-        $rolesValidos = [1, 2, 3, 4]; 
-        if (!in_array($nuevoRol, $rolesValidos)) {
-            return redirect()->back()->with('mensaje_error', 'El rol seleccionado no es válido.');
+        if (!$usuarioAEditar) {
+            return redirect()->back()->with('mensaje_error', 'Usuario no encontrado.');
         }
 
-        $usuarioModel = new UsuarioModel();
+        // No puedes cambiarle el rol a otro Admin
+        if ($usuarioAEditar['id_rol'] == 1 && $usuarioAEditar['id'] != session()->get('id')) {
+            return redirect()->back()->with('mensaje_error', 'Por seguridad, no puedes cambiar el rol de otro Administrador.');
+        }
 
-        if (!$usuarioModel->find($idUsuario)) {
-            return redirect()->back()->with('mensaje_error', 'Usuario no encontrado.');
+        $nuevoRol = $this->request->getPost('nuevo_rol'); 
+        $rolesValidos = [1, 2, 3, 4]; 
+        
+        if (!in_array($nuevoRol, $rolesValidos)) {
+            return redirect()->back()->with('mensaje_error', 'El rol seleccionado no es válido.');
         }
 
         $usuarioModel->save([
