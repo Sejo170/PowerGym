@@ -20,7 +20,7 @@ class Register extends BaseController
     // Procesa el formulario y crea el usuario
     public function save()
     {
-        // 1. Validamos los datos
+        // Validamos los datos
         $rules = [
             'nombre'      => 'required|min_length[3]',
             'apellidos'   => 'required|min_length[3]',
