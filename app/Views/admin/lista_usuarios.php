@@ -76,8 +76,15 @@
 
                         <td>
                             <div class="d-flex gap-2 align-items-center">
-                                <?php if ($usuario['id'] != session()->get('id')): ?>
-                                    
+                                <?php if ($usuario['id'] == session()->get('id')): ?>
+                                    <span class="text-muted fst-italic">(Tú)</span>
+
+                                <?php elseif ($usuario['id_rol'] == 1): ?>
+                                    <span class="text-muted fst-italic">
+                                        (Admin)
+                                    </span>
+
+                                <?php else: ?>
                                     <form action="<?= base_url('admin/cambiarRol/' . $usuario['id']) ?>" method="post" class="d-flex gap-1">
                                         <?= csrf_field() ?>
                                         <select name="nuevo_rol" class="form-select form-select-sm" required>
@@ -94,9 +101,6 @@
                                         <?= csrf_field() ?>
                                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Seguro?');">Borrar</button>
                                     </form>
-                                    
-                                <?php else: ?>
-                                    <span class="text-muted fst-italic">(Tú)</span>
                                 <?php endif; ?>
                             </div>
                         </td>
