@@ -63,22 +63,21 @@ class Productos extends BaseController
     // Funcion para guardar el producto
     public function guardar()
     {
-        // Validamos
         $validacion = $this->validate([
-            'nombre'       => 'required|min_length[3]',
+            'nombre'       => 'required|min_length[3]|is_unique[productos.nombre]',
             'descripcion'  => 'required',
             'precio'       => 'required|numeric',
             'stock'        => 'required|integer',
             'id_categoria' => 'required|integer',
             'imagen'       => [
                 'uploaded[imagen]',
-                'mime_in[imagen,image/jpg,image/jpeg,image/png,image/gif]',
+                'mime_in[imagen,image/jpg,image/jpeg,image/png,image/gif,image/webp]',
                 'max_size[imagen,2048]',
             ]
         ]);
 
         if (!$validacion) {
-            return redirect()->back()->withInput()->with('mensaje_error', 'Revisa los datos del formulario.');
+            return redirect()->back()->withInput()->with('mensaje_error', 'Error: Revisa los datos. Es posible que ya exista un producto con ese nombre exacto.');
         }
 
         // Procesamos la imagen
@@ -100,7 +99,6 @@ class Productos extends BaseController
         $productosModel = new ProductosModel();
         $productosModel->save($datos);
 
-        // Redirigimos a la lista mostrando un mensaje de exito
         return redirect()->to(base_url('admin/productos'))->with('mensaje_exito', '¡Producto creado correctamente!');
     }
 
@@ -146,11 +144,22 @@ class Productos extends BaseController
     // Funcion para ACTUALIZAR EL PRODUCTO
     public function actualizar()
     {
-        // Instanciamos el modelo
-        $productosModel = new ProductosModel();
-        
         // Recogemos el ID oculto del formulario
         $id = $this->request->getPost('id');
+
+        // Validamos que el nombre no lo tenga OTRO producto diferente
+        $validacionBasica = $this->validate([
+            'nombre' => "required|min_length[3]|is_unique[productos.nombre,id,{$id}]",
+            'precio' => 'required|numeric',
+            'stock'  => 'required|integer'
+        ]);
+
+        if (!$validacionBasica) {
+            return redirect()->back()->withInput()->with('mensaje_error', 'Error: Ese nombre de producto ya está siendo usado por otro artículo.');
+        }
+
+        // Instanciamos el modelo
+        $productosModel = new ProductosModel();
 
         // Recogemos los datos básicos
         $datos = [
@@ -164,20 +173,14 @@ class Productos extends BaseController
         // Lógica de la Imagen
         $img = $this->request->getFile('imagen');
 
-        // Solo si se ha subido una imagen nueva y es válida
         if ($img && $img->isValid() && !$img->hasMoved()) {
-            
-            // Validamos que sea imagen
-            $validacion = $this->validate([
+            $validacionImg = $this->validate([
                 'imagen' => 'uploaded[imagen]|max_size[imagen,2048]|is_image[imagen]'
             ]);
 
-            if ($validacion) {
-                // Subimos la nueva
+            if ($validacionImg) {
                 $nuevoNombre = $img->getRandomName();
                 $img->move(ROOTPATH . 'public/uploads/productos', $nuevoNombre);
-
-                // Añadimos el nombre al array de datos para que se actualice
                 $datos['imagen'] = $nuevoNombre;
             }
         }
@@ -185,7 +188,6 @@ class Productos extends BaseController
         // Actualizamos en la base de datos
         $productosModel->update($id, $datos);
 
-        // Redirigimos con un mostrando un mensaje de exito
         return redirect()->to(base_url('admin/productos'))->with('mensaje_exito', 'Producto actualizado correctamente.');
     }
 }
