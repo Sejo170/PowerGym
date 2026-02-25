@@ -61,6 +61,17 @@ class Admin extends BaseController
         // Comprobamos si el administrador ha enviado el formulario
         if ($this->request->getMethod() == 'POST') {
             
+            // Validamos que el email no exista ya
+            $reglas = [
+                'email' => 'required|valid_email|is_unique[usuarios.email]'
+            ];
+
+            // Si la validación falla (es decir, el email ya está pillado)
+            if (!$this->validate($reglas)) {
+                // withInput() devuelve los datos al formulario para que no tenga que volver a escribir el nombre, apellidos, etc.
+                return redirect()->back()->withInput()->with('mensaje_error', 'Ese correo electrónico ya está registrado en la base de datos.');
+            }
+
             $usuarioModel = new UsuarioModel();
 
             // Recogemos los datos exactos que escribió el admin en el formulario

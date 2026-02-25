@@ -34,7 +34,7 @@ class Register extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        // 2. Preparamos los datos para guardar
+        // Preparamos los datos para guardar
         $usuarioModel = new UsuarioModel();
 
         $data = [
@@ -45,10 +45,10 @@ class Register extends BaseController
             'id_rol'    => 3
         ];
 
-        // 3. Guardamos en la base de datos
+        // Guardamos en la base de datos
         $usuarioModel->save($data);
 
-        // 4. Lo mandamos al login para que entre
+        // Lo mandamos al login para que entre
         return redirect()->to('/login')->with('mensaje_exito', '¡Registro completado! Ahora puedes iniciar sesión.');
     }
 }
