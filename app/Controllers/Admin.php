@@ -12,17 +12,17 @@ class Admin extends BaseController
     // Funcion para mostrar DASHBOARD con datos
     public function index()
     {
-        // 1. Instancio los modelos
+        // Instancio los modelos
         $usuarioModel   = new UsuarioModel();
         $productosModel = new ProductosModel();
         $clasesModel    = new ClasesModel();
 
-        // 2. Pido el total de Usuarios, Productos y Clases
+        // Pido el total de Usuarios, Productos y Clases
         $data['total_usuarios']  = $usuarioModel->countAll();
         $data['total_productos'] = $productosModel->countAll();
         $data['total_clases']    = $clasesModel->countAll();
 
-        // 3. Cargamos la vista con la Dashboard
+        // Cargamos la vista con la Dashboard
         echo view('plantilla/header');
         echo view('admin/dashboard', $data); 
         echo view('plantilla/footer');
@@ -34,15 +34,15 @@ class Admin extends BaseController
         // Instancio el Modelo
         $usuarioModel = new UsuarioModel();
 
-        // 1. Capturo el dato 'rol' de la URL
+        // Capturo el dato 'rol' de la URL
         $filtroRol = $this->request->getGet('rol');
 
-        // 2. Si tengo un rol seleccionado, aplico el filtro
+        // Si tengo un rol seleccionado, aplico el filtro
         if ($filtroRol) {
             $usuarioModel->where('id_rol', $filtroRol);
         }
 
-        // 3. Obtengo los usuarios (filtrados o todos)
+        // Obtengo los usuarios (filtrados o todos)
         $data['usuarios'] = $usuarioModel->findAll();
 
         echo view('plantilla/header');
@@ -53,27 +53,27 @@ class Admin extends BaseController
     // Función para crear un nuevo usuario desde el panel de Admin
     public function crearUsuario()
     {
-        // 1. Verificamos la seguridad: Si no es Admin, lo bloqueamos
+        // Verificamos la seguridad: Si no es Admin, lo bloqueamos
         if (!session()->get('is_logged_in') || session()->get('id_rol') != 1) {
             return redirect()->to('/')->with('mensaje_error', 'Acceso denegado.');
         }
 
-        // 2. Comprobamos si el administrador ha enviado el formulario
+        // Comprobamos si el administrador ha enviado el formulario
         if ($this->request->getMethod() == 'POST') {
             
             $usuarioModel = new UsuarioModel();
 
-            // 3. Recogemos los datos exactos que escribió el admin en el formulario
+            // Recogemos los datos exactos que escribió el admin en el formulario
             $nombre    = $this->request->getPost('nombre');
             $apellidos = $this->request->getPost('apellidos');
             $email     = $this->request->getPost('email');
             $password  = $this->request->getPost('password');
             $id_rol    = $this->request->getPost('id_rol');
 
-            // 4. Encriptamos la contraseña por seguridad antes de guardarla
+            // Encriptamos la contraseña por seguridad antes de guardarla
             $passwordEncriptada = password_hash($password, PASSWORD_DEFAULT);
 
-            // 5. Preparamos el paquete de datos para enviarlo a la base de datos
+            // Preparamos el paquete de datos para enviarlo a la base de datos
             $datosParaGuardar = [
                 'nombre'         => $nombre,
                 'apellidos'      => $apellidos,
@@ -83,7 +83,7 @@ class Admin extends BaseController
                 'id_rol'         => $id_rol
             ];
 
-            // 6. Insertamos el nuevo registro y redirigimos con éxito
+            // Insertamos el nuevo registro y redirigimos con éxito
             $usuarioModel->insert($datosParaGuardar);
 
             return redirect()->to('/admin/usuarios')->with('mensaje_exito', 'Usuario creado correctamente.');
@@ -112,13 +112,13 @@ class Admin extends BaseController
         // Instancio el Modelo de Usuarios
         $usuarioModel = new UsuarioModel();
         
-        // 1. Buscamos y GUARDAMOS todos los datos del usuario que queremos borrar
+        // Buscamos y GUARDAMOS todos los datos del usuario que queremos borrar
         $usuarioABorrar = $usuarioModel->find($idUsuarioParaBorrar);
 
-        // 2. Verificamos si el usuario existe
+        // Verificamos si el usuario existe
         if($usuarioABorrar) {
             
-            // 3. Comprobamos si el usuario a borrar también es Admin (rol 1)
+            // Comprobamos si el usuario a borrar también es Admin (rol 1)
             if ($usuarioABorrar['id_rol'] == 1) {
                 // Si es admin, bloqueamos la acción y regresamos con un error
                 return redirect()->back()->with('mensaje_error', 'Por seguridad, no puedes eliminar a otro administrador.');
