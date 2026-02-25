@@ -9,31 +9,44 @@ use App\Models\ClasesModel;
 class Clases extends BaseController
 {
     // Funcion para mostrar una tabla con las clases
+    // Funcion para mostrar una tabla con las clases (CON FILTROS Y PAGINACIÓN)
     public function index()
     {
-        // 1. Instanciamos los modelos necesarios
         $clasesModel = new ClasesModel();
         $usuarioModel = new \App\Models\UsuarioModel();
 
-        // 2. Cargamos la lista de entrenadores para el desplegable del filtro
+        // Cargamos los entrenadores para el select
         $data['entrenadores'] = $usuarioModel->where('id_rol', 2)->findAll();
 
-        // 3. Capturamos el ID del entrenador desde la URL
+        // Capturamos los filtros de la URL
         $filtroEntrenador = $this->request->getGet('entrenador_id');
+        $busqueda = $this->request->getGet('buscar');
 
-        // 4. Preparamos la consulta con JOIN para traer los nombres de los entrenadores
         $clasesModel->select('clases.*, usuarios.nombre as nombre_entrenador, usuarios.apellidos as apellidos_entrenador')
                     ->join('usuarios', 'usuarios.id = clases.id_entrenador');
 
-        // 5. APLICAMOS EL FILTRO
+        // Ocultamos las clases pasadas
+        date_default_timezone_set('Europe/Madrid');
+        $fechaHoraActual = date('Y-m-d H:i:s');
+        $clasesModel->where('clases.fecha_hora >', $fechaHoraActual);
+
+        // Aplicamos el filtro por Entrenador
         if ($filtroEntrenador) {
             $clasesModel->where('clases.id_entrenador', $filtroEntrenador);
         }
 
-        // 6. Ejecutamos la consulta y guardamos los resultados
-        $data['clases'] = $clasesModel->orderBy('clases.fecha_hora', 'ASC')->findAll();
+        // Aplicamos el filtro por Nombre de la clase (NUEVO)
+        if ($busqueda) {
+            $clasesModel->like('clases.nombre', $busqueda);
+        }
 
-        // 7. Cargamos las vistas
+        // Ordenamos y PAGINAMOS (Ej: 10 clases por página)
+        $clasesModel->orderBy('clases.fecha_hora', 'ASC');
+        
+        // Pasamos los datos y los enlaces de paginación a la vista
+        $data['clases'] = $clasesModel->paginate(10);
+        $data['pager'] = $clasesModel->pager;
+
         echo view('plantilla/header');
         echo view('admin/clases/lista_clases', $data);
         echo view('plantilla/footer');
@@ -42,13 +55,13 @@ class Clases extends BaseController
     // Funcion para crear una clase
     public function crear()
     {
-        // 1. Llamamos al modelo de Usuarios
+        // Llamamos al modelo de Usuarios
         $usuarioModel = new \App\Models\UsuarioModel(); 
         
-        // 2. Buscamos SOLO a los entrenadores
+        // Buscamos SOLO a los entrenadores
         $data['entrenadores'] = $usuarioModel->where('id_rol', 2)->findAll();
 
-        // 3. Cargamos la vista pasando la lista de entrenadores ($data)
+        // Cargamos la vista pasando la lista de entrenadores ($data)
         echo view('plantilla/header');
         echo view('admin/clases/crear_clase', $data);
         echo view('plantilla/footer');
@@ -126,12 +139,12 @@ class Clases extends BaseController
         // Recuperamos la clase
         $clase = $clasesModel->find($id);
         
-        // 1. Verificación de existencia
+        // Verificación de existencia
         if (!$clase) {
             return redirect()->to('admin/clases')->with('mensaje_error', 'La clase no existe.');
         }
 
-        // 2. Si es Entrenador (rol 2) y la clase no le pertenece, denegar acceso
+        // Si es Entrenador (rol 2) y la clase no le pertenece, denegar acceso
         if (session()->get('id_rol') == 2 && $clase['id_entrenador'] != session()->get('id')) {
             return redirect()->to('admin/clases')->with('mensaje_error', 'No tienes permiso para editar clases de otros entrenadores.');
         }

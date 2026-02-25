@@ -12,13 +12,59 @@
         </div>
     <?php endif; ?>
 
+    <div class="card shadow-sm mb-4">
+        <div class="card-body bg-light">
+            <form action="<?= base_url('admin/clases') ?>" method="get">
+                <div class="row align-items-end">
+                    
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label fw-bold">Buscar Clase:</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">🔍</span>
+                            <input type="text" name="buscar" class="form-control" placeholder="Ej: Yoga, Spinning..." value="<?= isset($_GET['buscar']) ? esc($_GET['buscar']) : '' ?>">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label fw-bold">Filtrar por Entrenador:</label>
+                        <select name="entrenador_id" class="form-select">
+                            <option value="">Todos los entrenadores</option>
+                            <?php if (!empty($entrenadores)): ?>
+                                <?php foreach ($entrenadores as $entrenador): ?>
+                                    <option value="<?= $entrenador['id'] ?>" <?= (isset($_GET['entrenador_id']) && $_GET['entrenador_id'] == $entrenador['id']) ? 'selected' : '' ?>>
+                                        <?= esc($entrenador['nombre']) . ' ' . esc($entrenador['apellidos']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2 mb-2">
+                        <button type="submit" class="btn btn-dark w-100">
+                            Filtrar
+                        </button>
+                    </div>
+
+                    <?php if(isset($_GET['entrenador_id']) || isset($_GET['buscar'])): ?>
+                        <div class="col-md-2 mb-2">
+                            <a href="<?= base_url('admin/clases') ?>" class="btn btn-outline-secondary w-100">
+                                Limpiar
+                            </a>
+                        </div>
+                    <?php endif; ?>
+
+                </div>
+            </form>
+        </div>
+    </div>
     <div class="card shadow-sm">
         <?php if (session()->getFlashdata('mensaje_exito')): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
                 <?= session()->getFlashdata('mensaje_exito') ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         <?php endif; ?>
+        
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover table-striped mb-0 align-middle">
@@ -36,7 +82,7 @@
                     <tbody>
                         <?php if (empty($clases)): ?>
                             <tr>
-                                <td colspan="7" class="text-center py-4">No hay clases creadas todavía.</td>
+                                <td colspan="7" class="text-center py-4">No se encontraron clases con esos filtros.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($clases as $clase): ?>
@@ -44,7 +90,21 @@
                                     <td>#<?= $clase['id'] ?></td>
                                     <td class="fw-bold"><?= esc($clase['nombre']) ?></td>
                                     <td><?= esc($clase['descripcion']) ?></td>
-                                    <td><?= $clase['fecha_hora'] ?></td>
+                                    
+                                    <td>
+                                        <div class="fw-bold"><?= date('d/m/Y H:i', strtotime($clase['fecha_hora'])) ?></div>
+                                        <?php 
+                                            date_default_timezone_set('Europe/Madrid');
+                                            $fechaActual = date('Y-m-d H:i:s');
+                                            
+                                            if ($clase['fecha_hora'] < $fechaActual): 
+                                        ?>
+                                            <span class="badge bg-danger">🔴 Finalizada</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-success">🟢 Próxima</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    
                                     <td><?= $clase['plazas_totales'] ?></td>
                                     
                                     <td>
